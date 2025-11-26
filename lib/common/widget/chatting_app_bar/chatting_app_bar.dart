@@ -40,18 +40,21 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     bool isDark = MyHelperFunction.isDarkMode(context);
-    final bg = backgroundColor ?? Mycolors.dark;
-    final fg = foregroundColor ?? Colors.white;
+    // final bg = backgroundColor ?? Mycolors.dark;
+    // final fg = foregroundColor ?? Colors.white;
 
     return AppBar(
-      backgroundColor: bg,
-      foregroundColor: fg,
+      backgroundColor: isDark ? Mycolors.dark : Mycolors.light,
+      foregroundColor: isDark ? Mycolors.light : Mycolors.dark,
       elevation: 0,
       automaticallyImplyLeading: false,
       titleSpacing: 0,
       leadingWidth: 50,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
+        icon: Icon(
+          Icons.arrow_back,
+          color: isDark ? Mycolors.light : Mycolors.dark,
+        ),
         onPressed: onBack ?? () => Navigator.pop(context),
       ),
       title: Row(
@@ -67,12 +70,20 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
             children: [
               Text(
                 name,
-                style: TextStyle(color: fg, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: isDark ? Mycolors.light : Mycolors.dark,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               if (subtitle != null)
                 Text(
                   subtitle!,
-                  style: TextStyle(color: fg.withOpacity(0.7), fontSize: 12),
+                  style: TextStyle(
+                    color: isDark
+                        ? Mycolors.light
+                        : Mycolors.dark.withOpacity(0.7),
+                    fontSize: 12,
+                  ),
                 ),
             ],
           ),
