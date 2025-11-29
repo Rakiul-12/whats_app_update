@@ -38,6 +38,34 @@ dependencies:
   #cached_network_image
   cached_network_image: ^3.4.1
 
+  # #firebase
+  # firebase: ^9.0.3
+
+  #firebase_core
+  firebase_core: ^4.2.1
+
+  #firebase_auth
+  firebase_auth: ^6.1.2
+
+  #dio
+  dio: ^5.9.0
+
+  #connectivity_plus
+  connectivity_plus: ^7.0.0
+
+  #get_storage
+  get_storage: ^2.1.1
+
+
+  #crypto
+  crypto: ^3.0.7
+
+  #image_picker
+  image_picker: ^1.2.1
+
+  #cloud_firestore
+  cloud_firestore: ^6.1.0
+
 
 
 

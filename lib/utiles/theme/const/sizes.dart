@@ -44,4 +44,8 @@ class Mysize {
   // Animation height
   static const double animationHeight = 225.0;
   static const double animationwidth = 225.0;
+
+  // Image height and width
+  static const double profile_image_height = 150.0;
+  static const double profile_image_width = 150.0;
 }

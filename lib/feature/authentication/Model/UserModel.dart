@@ -1,0 +1,88 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class UserModel {
+  // keep final which do not want to update
+  final String id;
+  String phoneNumber;
+  String about;
+  final String username;
+  final String email;
+  String profilePicture;
+  String createdAt;
+  bool isOnline;
+  String pushToken;
+  String lastActive;
+  String publicId;
+
+  UserModel({
+    required this.id,
+    required this.username,
+    required this.email,
+    required this.phoneNumber,
+    required this.profilePicture,
+    required this.about,
+    required this.createdAt,
+    required this.isOnline,
+    required this.pushToken,
+    required this.lastActive,
+    this.publicId = '',
+  });
+
+  /// Function to get the full name
+  String get fullName => username;
+
+  /// static function to create an empty user model
+  static UserModel empty() => UserModel(
+    id: "",
+    username: "",
+    email: "",
+    phoneNumber: "",
+    profilePicture: "",
+    about: "Hi, there I'm using WhatsApp",
+    createdAt: "",
+    isOnline: true,
+    pushToken: "",
+    lastActive: "",
+    publicId: "",
+  );
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'email': email,
+      'phoneNumber': phoneNumber,
+      'profilePicture': profilePicture,
+      'about': about,
+      'createdAt': createdAt,
+      'isOnline': isOnline,
+      'pushToken': pushToken,
+      'lastActive': lastActive,
+      'publicId': publicId,
+    };
+  }
+
+  factory UserModel.fromSnapshot(
+    DocumentSnapshot<Map<String, dynamic>> document,
+  ) {
+    final data = document.data();
+
+    if (data == null) {
+      return UserModel.empty();
+    }
+
+    return UserModel(
+      id: document.id,
+      username: data['username'] ?? '',
+      email: data['email'] ?? '',
+      phoneNumber: data['phoneNumber'] ?? '',
+      profilePicture: data['profilePicture'] ?? '',
+      about: data['about'] ?? "Hi, there I'm using WhatsApp",
+      createdAt: data['createdAt'] ?? '',
+      isOnline: data['isOnline'] ?? false,
+      pushToken: data['pushToken'] ?? '',
+      lastActive: data['lastActive'] ?? '',
+      publicId: data['publicId'] ?? '',
+    );
+  }
+}

@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:whats_app/utiles/theme/const/colors.dart';
 
 class MyElevatedButton extends StatelessWidget {
   const MyElevatedButton({
     super.key,
     required this.onPressed,
     required this.text,
+    this.isLoading = false,
   });
 
   final VoidCallback onPressed;
   final String text;
+  final bool isLoading;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color.fromARGB(255, 2, 173, 65),
           padding: const EdgeInsets.symmetric(vertical: 16),

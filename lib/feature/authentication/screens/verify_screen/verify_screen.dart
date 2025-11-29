@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:pinput/pinput.dart';
 import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/button/MyElevatedButton.dart';
 import 'package:whats_app/common/widget/style/screen_padding.dart';
-import 'package:whats_app/feature/personalization/screen/profile/profile.dart';
+import 'package:whats_app/data/repository/authentication_repo/AuthenticationRepo.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/const/text.dart';
@@ -16,8 +15,8 @@ class verify_screen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController otpController = TextEditingController();
     bool dark = MyHelperFunction.isDarkMode(context);
+    AuthenticationRepository controller = Get.put(AuthenticationRepository());
 
     // verify code input box theme
     final defaultPinTheme = PinTheme(
@@ -40,7 +39,9 @@ class verify_screen extends StatelessWidget {
       floatingActionButton: Container(
         // margin: EdgeInsets.only(bottom: Mysize.iconLg),
         child: MyElevatedButton(
-          onPressed: () => Get.to(() => profile_screen()),
+          onPressed: () {
+            controller.verifyWithOtp();
+          },
           text: "Verify",
         ),
       ),
@@ -72,7 +73,7 @@ class verify_screen extends StatelessWidget {
                       TextSpan(text: MyText.verify_phone_number_2nd_text),
                       TextSpan(text: MyText.verify_phone_number_3rd_text),
                       TextSpan(
-                        text: "01870457061.",
+                        text: controller.fullPhone.string,
                         style: TextStyle(
                           fontSize: Mysize.fontSizeMd,
                           fontWeight: FontWeight.bold,
@@ -91,7 +92,7 @@ class verify_screen extends StatelessWidget {
                 // verify code input box
                 Pinput(
                   length: 6,
-                  controller: otpController,
+                  controller: controller.otpController,
                   defaultPinTheme: defaultPinTheme,
                   focusedPinTheme: defaultPinTheme.copyWith(
                     decoration: BoxDecoration(

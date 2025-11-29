@@ -5,7 +5,7 @@ import 'package:whats_app/feature/Chatting_screen/widget/text_field.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
 class ChattingScreen extends StatelessWidget {
-  ChattingScreen({super.key});
+  const ChattingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

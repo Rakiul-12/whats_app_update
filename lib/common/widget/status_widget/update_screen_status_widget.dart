@@ -10,7 +10,7 @@ class status_widget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Profile_picture(radius: 30, icon: Icons.add),
+        Profile_picture(radius: 30, icon: Icons.add, onTap: () {}),
         SizedBox(width: Mysize.lg),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,

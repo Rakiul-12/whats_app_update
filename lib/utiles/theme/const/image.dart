@@ -10,4 +10,7 @@ class MyImage {
   // community screen animation
   static const String onCommunityScreen =
       "assets/animation/community/boy-under-social-tree.json";
+
+  static const String loadingAnimation =
+      "assets/animation/community/Share on Whatsapp.json";
 }

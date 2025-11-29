@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:whats_app/common/widget/button/MyElevatedButton.dart';
-import 'package:whats_app/common/widget/profile_picture/custom_profile_picture.dart';
 import 'package:whats_app/common/widget/style/screen_padding.dart';
-import 'package:whats_app/feature/NavBar/navbar.dart';
+import 'package:whats_app/feature/authentication/screens/log_in_screen/widget/UserProfileWithUserIcon.dart';
+import 'package:whats_app/feature/personalization/controller/UserController.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/const/text.dart';
 
@@ -13,11 +13,12 @@ class profile_screen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(UserController());
     return Scaffold(
       floatingActionButton: Container(
         // margin: EdgeInsets.only(bottom: Mysize.iconLg),
         child: MyElevatedButton(
-          onPressed: () => Get.offAll(() => navigationMenuScreen()),
+          onPressed: controller.saveUserRecord,
           text: "Next",
         ),
       ),
@@ -39,12 +40,13 @@ class profile_screen extends StatelessWidget {
                 SizedBox(height: Mysize.spaceBtwSections),
 
                 // Profile picture
-                Profile_picture(radius: 40 * 2, icon: Iconsax.edit),
+                UserProfileWithUserIcon(),
 
                 SizedBox(height: Mysize.spaceBtwSections * 2),
 
                 // Name_filed
                 TextFormField(
+                  controller: controller.userName,
                   decoration: InputDecoration(
                     hintText: "Enter your name...",
                     suffixIcon: Icon(Iconsax.emoji_happy),

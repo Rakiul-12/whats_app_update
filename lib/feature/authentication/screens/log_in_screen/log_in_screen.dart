@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:whats_app/common/widget/button/MyElevatedButton.dart';
 import 'package:whats_app/common/widget/style/screen_padding.dart';
-import 'package:whats_app/feature/authentication/screens/verify_screen/verify_screen.dart';
+import 'package:whats_app/data/repository/authentication_repo/AuthenticationRepo.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/const/text.dart';
@@ -15,14 +14,17 @@ class Log_in_screen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AuthenticationRepository controller = Get.put(AuthenticationRepository());
     bool dark = MyHelperFunction.isDarkMode(context);
-    String fullPhone = '';
-
+    // String fullPhone = '';
     return Scaffold(
       floatingActionButton: Container(
         // margin: EdgeInsets.only(bottom: Mysize.iconLg),
         child: MyElevatedButton(
-          onPressed: () => Get.to(() => verify_screen()),
+          onPressed: () {
+            controller.SignInWithPhoneNumber();
+            // print('button clicked');
+          },
           text: "Next",
         ),
       ),
@@ -39,7 +41,6 @@ class Log_in_screen extends StatelessWidget {
                   MyText.log_in_screen_1st_text,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
-
                 SizedBox(height: Mysize.spaceBtwItems),
 
                 RichText(
@@ -73,11 +74,11 @@ class Log_in_screen extends StatelessWidget {
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     invalidNumberMessage: 'Enter a valid phone number',
                     onChanged: (phone) {
-                      fullPhone = phone.completeNumber.trim();
+                      controller.fullPhone.value = phone.completeNumber.trim();
                     },
-                    onSaved: (phone) {
-                      fullPhone = phone?.completeNumber.trim() ?? '';
-                    },
+                    // onSaved: (phone) {
+                    //   fullPhone = phone?.completeNumber.trim() ?? '';
+                    // },
                   ),
                 ),
               ],

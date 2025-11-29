@@ -61,7 +61,7 @@ class chat_screen extends StatelessWidget {
             child: chat_screen_search_bar(),
           ),
 
-          // SizedBox(height: Mysize.spaceBtw~Sections),
+          // SizedBox(height: Mysize.spaceBtwSections),
 
           // chats
           chat_screen_chat_list(),
