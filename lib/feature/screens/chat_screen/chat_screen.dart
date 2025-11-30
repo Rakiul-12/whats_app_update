@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/search_bar/search_bar.dart';
 import 'package:whats_app/feature/screens/chat_screen/widgets/chat_list.dart';
+import 'package:whats_app/feature/screens/chat_screen/widgets/popUpMenu.dart';
+import 'package:whats_app/utiles/CameraAccess/CameraAccess.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/const/text.dart';
@@ -12,6 +15,7 @@ class chat_screen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(CameraAccess());
     bool isDark = MyHelperFunction.isDarkMode(context);
 
     return Scaffold(
@@ -24,8 +28,14 @@ class chat_screen extends StatelessWidget {
           ),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.camera_alt)),
-          IconButton(onPressed: () {}, icon: Icon(Icons.more_vert)),
+          // Camera Icon
+          IconButton(
+            onPressed: controller.GetCameraAccess,
+            icon: const Icon(Icons.camera_alt),
+          ),
+
+          //3 DOTS MENU
+          popUpMenu(),
         ],
       ),
 

@@ -2,10 +2,11 @@
     package="com.example.whats_app">
     <!-- Android 13+ gallery access -->
 <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+<uses-permission android:name="android.permission.CAMERA"/>
 
 
     <application
-        android:label="whats_app"
+        android:label="WhatsApp"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
