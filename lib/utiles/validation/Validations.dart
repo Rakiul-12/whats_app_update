@@ -1,5 +1,3 @@
-import 'package:get/get.dart';
-
 class MyValidator {
   /// Empty Text Validation
   static String? validateEmptyText(String? fieldName, String? value) {

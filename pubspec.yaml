@@ -66,6 +66,10 @@ dependencies:
   #cloud_firestore
   cloud_firestore: ^6.1.0
 
+
+  #firebase_messaging
+  firebase_messaging: ^16.0.4
+
   #flutter_launcher_icons
   # flutter_launcher_icons: ^0.14.4
 

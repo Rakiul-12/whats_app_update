@@ -1,10 +1,15 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:whats_app/data/repository/authentication_repo/AuthenticationRepo.dart';
 import 'package:whats_app/data/repository/user/UserRepository.dart';
 import 'package:whats_app/feature/NavBar/navbar.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
+import 'package:whats_app/feature/authentication/backend/MessageRepo/MessageRepository.dart';
+import 'package:whats_app/utiles/const/keys.dart';
 import 'package:whats_app/utiles/popup/MyFullScreenLoader.dart';
 import 'package:whats_app/utiles/popup/SnackbarHepler.dart';
 import 'package:dio/dio.dart' as dio;
@@ -15,6 +20,7 @@ class UserController extends GetxController {
   Rx<UserModel> user = UserModel.empty().obs;
   final _userRepository = Get.put(UserRepository());
   TextEditingController userName = TextEditingController();
+  final _messageRepo = Get.put(Messagerepository());
 
   // get MyFullScreenLoader => null;
 
@@ -108,5 +114,98 @@ class UserController extends GetxController {
         message: "Something went wrong while saving your information",
       );
     }
+  }
+
+  // updateActiveStatus
+  Future<void> updateActiveStatus(bool isOnline) async {
+    try {
+      final uid = AuthenticationRepository.instance.currentUser!.uid;
+
+      await FirebaseFirestore.instance
+          .collection(MyKeys.userCollection)
+          .doc(uid)
+          .update({
+            'isOnline': isOnline,
+            'lastActive': FieldValue.serverTimestamp(),
+            'pushToken': Messagerepository.me.pushToken,
+          });
+    } catch (e) {
+      print("Update active status failed: $e");
+    }
+  }
+
+  // getLastActiveTime
+  static String getLastActiveTime({
+    required BuildContext context,
+    required String lastActive,
+  }) {
+    final int i = int.tryParse(lastActive) ?? -1;
+    if (i == -1) return 'Last seen not available';
+
+    DateTime time = DateTime.fromMillisecondsSinceEpoch(i);
+    DateTime now = DateTime.now();
+
+    String formattedTime = TimeOfDay.fromDateTime(time).format(context);
+    if (time.day == now.day &&
+        time.month == now.month &&
+        time.year == time.year) {
+      return 'Last seen today at $formattedTime';
+    }
+
+    if ((now.difference(time).inHours / 24).round() == 1) {
+      return 'Last seen yesterday at $formattedTime';
+    }
+    String month = _getmonth(time);
+    return 'Last seen on ${time.day} $month on $formattedTime';
+  }
+
+  static String _getmonth(DateTime date) {
+    switch (date.month) {
+      case 1:
+        return "Jan";
+      case 2:
+        return "Feb";
+      case 3:
+        return "Mar";
+      case 4:
+        return "Apr";
+      case 5:
+        return "May";
+      case 6:
+        return "Jun";
+      case 7:
+        return "Jul";
+      case 8:
+        return "Aug";
+      case 9:
+        return "Sep";
+      case 10:
+        return "Oct";
+      case 11:
+        return "Nov";
+      case 12:
+        return "Dec";
+    }
+    return "";
+  }
+
+  // getMessageTime
+  static String getMessageTime({
+    required BuildContext context,
+    required String time,
+  }) {
+    final DateTime sent = DateTime.fromMillisecondsSinceEpoch(int.parse(time));
+    final DateTime now = DateTime.now();
+
+    final formatedTime = TimeOfDay.fromDateTime(sent).format(context);
+
+    if (now.day == sent.day &&
+        now.month == sent.month &&
+        now.year == sent.year) {
+      return formatedTime;
+    }
+    return now.year == sent.year
+        ? "$formatedTime - ${sent.day} ${_getmonth(sent)}"
+        : "$formatedTime - ${sent.day} ${_getmonth(sent)} ${sent.year}";
   }
 }
