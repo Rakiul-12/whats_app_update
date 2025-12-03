@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:whats_app/feature/authentication/backend/MessageRepo/MessageRepository.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
@@ -12,9 +13,10 @@ class MessageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isDark = MyHelperFunction.isDarkMode(context);
 
-    final String text = message['msg'] ?? '';
-    final String time = message['time'] ?? '';
-    final bool isSeen = message['isSeen'] ?? false;
+    final String text = (message['msg'] ?? '').toString();
+    final dynamic time =
+        message['sent']; // ❗ no `?? ''`, let helper handle null
+    final bool isSeen = (message['isSeen'] ?? false) == true;
 
     final String? fromId = message['fromId'] as String?;
     final String myId = FirebaseAuth.instance.currentUser!.uid;
@@ -45,19 +47,30 @@ class MessageCard extends StatelessWidget {
             Text(
               text,
               style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                color: isDark ? Mycolors.light : Mycolors.light,
+                color: Mycolors.light,
                 fontSize: 15,
               ),
             ),
 
             const SizedBox(height: 4),
 
-            // TIME + DOUBLE TICK
+            // TIME + DAY + DOUBLE TICK
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  time,
+                  Messagerepository.getFormattedTime(
+                    context: context,
+                    time: time,
+                  ),
+                  style: const TextStyle(fontSize: 11, color: Colors.white70),
+                ),
+                const Text(", "),
+                Text(
+                  Messagerepository.getLastMessageday(
+                    context: context,
+                    time: time,
+                  ),
                   style: const TextStyle(fontSize: 11, color: Colors.white70),
                 ),
                 if (isSentByMe) ...[

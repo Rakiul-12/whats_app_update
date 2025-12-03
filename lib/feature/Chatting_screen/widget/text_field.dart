@@ -20,6 +20,7 @@ class Text_filed extends GetView<ChatController> {
             child: Padding(
               padding: const EdgeInsets.only(left: 10),
               child: TextFormField(
+                maxLines: null,
                 controller: controller.textController,
                 style: TextStyle(
                   fontSize: 15,
@@ -67,6 +68,7 @@ class Text_filed extends GetView<ChatController> {
                       ],
                     ),
                   ),
+
                   hintText: "Message...",
                   hintMaxLines: 1,
                   contentPadding: const EdgeInsets.symmetric(
@@ -78,7 +80,7 @@ class Text_filed extends GetView<ChatController> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: const Color.fromARGB(207, 209, 200, 200),
+                  fillColor: const Color.fromARGB(207, 157, 129, 129),
                 ),
               ),
             ),

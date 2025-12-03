@@ -75,7 +75,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
                     color: isDark ? Mycolors.light : Mycolors.dark,
                     fontWeight: FontWeight.w600,
                   ),
@@ -83,11 +83,10 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                 if (subtitle != null)
                   Text(
                     subtitle!,
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.labelLarge!.copyWith(
                       color: isDark
                           ? Mycolors.light
                           : Mycolors.dark.withOpacity(0.7),
-                      fontSize: 12,
                     ),
                   ),
               ],

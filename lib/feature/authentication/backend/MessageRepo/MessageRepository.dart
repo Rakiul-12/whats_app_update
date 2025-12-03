@@ -30,9 +30,7 @@ class Messagerepository extends GetxController {
   }
 
   /// Get all messages
-  Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessage(
-    UserModel otherUser,
-  ) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessage() {
     return _firestore.collection("message").snapshots();
   }
 
@@ -66,35 +64,87 @@ class Messagerepository extends GetxController {
     String msg,
     MessageType type,
   ) async {
-    final time = DateTime.now().millisecondsSinceEpoch.toString();
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-
-    final message = Message(
-      toId: chatUser.id,
-      msg: msg,
-      read: '',
-      type: type,
-      fromId: uid,
-      sent: time,
-    );
+    final timeId = DateTime.now().millisecondsSinceEpoch.toString();
+    final String currentUid = FirebaseAuth.instance.currentUser!.uid;
 
     final cid = getConversationID(chatUser.id);
 
-    final ref = FirebaseFirestore.instance
-        .collection('chats')
-        .doc(cid)
-        .collection('messages');
-
-    await ref.doc(time).set(message.toJson());
+    await FirebaseFirestore.instance
+        .collection('chats/$cid/messages')
+        .doc(timeId)
+        .set({
+          'toId': chatUser.id,
+          'fromId': currentUid,
+          'msg': msg,
+          'read': '',
+          'type': type.name,
+          'sent': FieldValue.serverTimestamp(),
+        });
   }
 
   // getFormattedTime
   static String getFormattedTime({
     required BuildContext context,
-    required String time,
+    required dynamic time,
   }) {
-    final date = DateTime.fromMillisecondsSinceEpoch(int.parse(time));
-    return TimeOfDay.fromDateTime(date).format(context);
+    final dt = _parseTime(time);
+    if (dt == null) return '';
+
+    return TimeOfDay.fromDateTime(dt).format(context);
+  }
+
+  static DateTime? _parseTime(dynamic time) {
+    if (time == null) return null;
+
+    if (time is Timestamp) {
+      return time.toDate();
+    }
+
+    if (time is String) {
+      final ms = int.tryParse(time);
+      if (ms != null) {
+        return DateTime.fromMillisecondsSinceEpoch(ms);
+      }
+      // try ISO string
+      try {
+        return DateTime.parse(time);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    if (time is DateTime) {
+      return time;
+    }
+
+    return null;
+  }
+
+  // getLastMessageday
+  static String getLastMessageday({
+    required BuildContext context,
+    required dynamic time,
+  }) {
+    final dt = _parseTime(time);
+    if (dt == null) return '';
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final thatDay = DateTime(dt.year, dt.month, dt.day);
+
+    final diff = today.difference(thatDay).inDays;
+
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yesterday';
+    if (diff < 7 && diff > 1) {
+      // Mon, Tue, ...
+      const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return weekdays[dt.weekday - 1];
+    }
+    // fallback: dd/MM/yy
+    return '${dt.day.toString().padLeft(2, '0')}/'
+        '${dt.month.toString().padLeft(2, '0')}/'
+        '${dt.year.toString().substring(2)}';
   }
 
   // updateMessageReadStatus
@@ -162,16 +212,5 @@ class Messagerepository extends GetxController {
         return "Dec";
     }
     return "";
-  }
-
-  // getLastMessageday
-  static String getLastMessageday({
-    required BuildContext context,
-    required String time,
-  }) {
-    final DateTime sent = DateTime.fromMillisecondsSinceEpoch(int.parse(time));
-    final DateTime now = DateTime.now();
-    if (now.month == sent.month && now.year == sent.year) {}
-    return "${sent.day} ${_getMonth(sent)}";
   }
 }
