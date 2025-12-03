@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/search_bar/search_bar.dart';
+import 'package:whats_app/data/repository/user/UserRepository.dart';
 import 'package:whats_app/feature/screens/chat_screen/widgets/chat_list.dart';
 import 'package:whats_app/feature/screens/chat_screen/widgets/popUpMenu.dart';
 import 'package:whats_app/utiles/CameraAccess/CameraAccess.dart';
@@ -15,6 +16,7 @@ class chat_screen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final RepoController = Get.put(UserRepository());
     final controller = Get.put(CameraAccess());
     bool isDark = MyHelperFunction.isDarkMode(context);
 

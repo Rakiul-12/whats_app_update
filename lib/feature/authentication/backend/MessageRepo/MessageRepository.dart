@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:whats_app/binding/binding.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
 import 'package:whats_app/feature/personalization/Model/MessageModel.dart';
 
@@ -29,7 +30,9 @@ class Messagerepository extends GetxController {
   }
 
   /// Get all messages
-  Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessage() {
+  Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessage(
+    UserModel otherUser,
+  ) {
     return _firestore.collection("message").snapshots();
   }
 
@@ -61,22 +64,21 @@ class Messagerepository extends GetxController {
   static Future<void> sendMessage(
     UserModel chatUser,
     String msg,
-    Type type,
+    MessageType type,
   ) async {
     final time = DateTime.now().millisecondsSinceEpoch.toString();
-
-    final String currentUid = FirebaseAuth.instance.currentUser!.uid;
+    final uid = FirebaseAuth.instance.currentUser!.uid;
 
     final message = Message(
-      told: chatUser.id,
+      toId: chatUser.id,
       msg: msg,
       read: '',
       type: type,
-      fromId: currentUid,
+      fromId: uid,
       sent: time,
     );
 
-    final String cid = getConversationID(chatUser.id);
+    final cid = getConversationID(chatUser.id);
 
     final ref = FirebaseFirestore.instance
         .collection('chats')

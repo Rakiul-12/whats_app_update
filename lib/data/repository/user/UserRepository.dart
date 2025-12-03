@@ -161,4 +161,9 @@ class UserRepository extends GetxController {
       throw "Something went wrong. Please try again.";
     }
   }
+
+  // getAllUsersStream
+  Stream<QuerySnapshot<Map<String, dynamic>>> getAllUsersStream() {
+    return _Db.collection(MyKeys.userCollection).snapshots();
+  }
 }

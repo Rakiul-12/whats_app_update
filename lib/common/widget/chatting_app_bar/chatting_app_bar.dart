@@ -7,8 +7,8 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ChatAppBar({
     super.key,
     required this.name,
-    this.subtitle,
-    this.avatarImage,
+    required this.subtitle,
+    required this.avatarImage,
     this.onBack,
     this.onProfileTap,
     this.onVideoCall,
@@ -40,8 +40,6 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     bool isDark = MyHelperFunction.isDarkMode(context);
-    // final bg = backgroundColor ?? Mycolors.dark;
-    // final fg = foregroundColor ?? Colors.white;
 
     return AppBar(
       backgroundColor: isDark ? Mycolors.dark : Mycolors.light,
@@ -59,33 +57,41 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: Row(
         children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundImage: AssetImage(MyImage.onProfileScreen),
+          GestureDetector(
+            onTap: onProfileTap,
+            child: CircleAvatar(
+              radius: 25,
+              backgroundImage:
+                  avatarImage ?? AssetImage(MyImage.onProfileScreen),
+            ),
           ),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                name,
-                style: TextStyle(
-                  color: isDark ? Mycolors.light : Mycolors.dark,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              if (subtitle != null)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 Text(
-                  subtitle!,
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: isDark
-                        ? Mycolors.light
-                        : Mycolors.dark.withOpacity(0.7),
-                    fontSize: 12,
+                    color: isDark ? Mycolors.light : Mycolors.dark,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-            ],
+                if (subtitle != null)
+                  Text(
+                    subtitle!,
+                    style: TextStyle(
+                      color: isDark
+                          ? Mycolors.light
+                          : Mycolors.dark.withOpacity(0.7),
+                      fontSize: 12,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),

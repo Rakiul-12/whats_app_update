@@ -1,38 +1,44 @@
-class Message {
-  Message({
-    required this.told,
-    required this.msg,
-    required this.fromId,
-    required this.read,
-    required this.sent,
-    required this.type,
-  });
-  late final String told;
-  late final String msg;
-  late final String fromId;
-  late final String read;
-  late final String sent;
-  late final Type type;
+import 'package:whats_app/binding/binding.dart';
 
-  Message.fromJson(Map<String, dynamic> json) {
-    told = json['told'].toString();
-    msg = json['msg'].toString();
-    fromId = json['fromId'].toString();
-    read = json['read'].toString();
-    sent = json['sent'].toString();
-    type = json['type'].toString() == Type.image.name ? Type.image : Type.text;
-  }
+class Message {
+  final String toId;
+  final String fromId;
+  final String msg;
+  final String read;
+  final MessageType type;
+  final String sent;
+
+  Message({
+    required this.toId,
+    required this.fromId,
+    required this.msg,
+    required this.read,
+    required this.type,
+    required this.sent,
+  });
 
   Map<String, dynamic> toJson() {
-    final data = <String, dynamic>{};
-    data['told'] = told;
-    data['msg'] = msg;
-    data['fromId'] = fromId;
-    data['read'] = read;
-    data['sent'] = sent;
-    data['type'] = type.name;
-    return data;
+    return {
+      'toId': toId,
+      'fromId': fromId,
+      'msg': msg,
+      'read': read,
+      'type': type.name, // save as "text", "image", etc.
+      'sent': sent,
+    };
+  }
+
+  factory Message.fromJson(Map<String, dynamic> json) {
+    return Message(
+      toId: json['toId'],
+      fromId: json['fromId'],
+      msg: json['msg'],
+      read: json['read'],
+      type: MessageType.values.firstWhere(
+        (e) => e.name == json['type'],
+        orElse: () => MessageType.text,
+      ),
+      sent: json['sent'],
+    );
   }
 }
-
-enum Type { text, image }
