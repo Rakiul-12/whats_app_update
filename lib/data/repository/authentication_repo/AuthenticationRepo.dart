@@ -89,7 +89,8 @@ class AuthenticationRepository extends GetxController {
         phoneNumber: fullPhone.string,
         verificationCompleted: (PhoneAuthCredential credential) {},
         verificationFailed: (FirebaseException e) {
-          MySnackBarHelpers.errorSnackBar(title: e.toString());
+          MySnackBarHelpers.errorSnackBar(title: "Something went wrong");
+          print("Error was : ${e.toString()}");
         },
         codeSent: (String verificationId, int? resendToken) {
           VerifyId = verificationId;

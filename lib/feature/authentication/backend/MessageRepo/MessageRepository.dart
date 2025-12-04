@@ -36,12 +36,10 @@ class Messagerepository extends GetxController {
 
   /// Build conversation ID between current user and another user
   static String getConversationID(String otherUserId) {
-    final currentUid = FirebaseAuth.instance.currentUser!.uid;
-
-    // Sort IDs in a stable way so both users get the same conversation ID
-    return currentUid.hashCode <= otherUserId.hashCode
-        ? "${currentUid}_$otherUserId"
-        : "${otherUserId}_$currentUid";
+    final myId = FirebaseAuth.instance.currentUser!.uid;
+    return myId.hashCode <= otherUserId.hashCode
+        ? '${myId}_$otherUserId'
+        : '${otherUserId}_$myId';
   }
 
   // getAllMessage
@@ -148,10 +146,18 @@ class Messagerepository extends GetxController {
   }
 
   // updateMessageReadStatus
-  static Future<void> updateMessageReadStatus(Message message) async {
-    FirebaseFirestore.instance
-        .collection('chats/${getConversationID(message.fromId)}/messages/')
-        .doc(message.sent)
+  static Future<void> markMessageAsRead(
+    String otherUserId,
+    String messageId,
+  ) async {
+    final myId = FirebaseAuth.instance.currentUser!.uid;
+    final cid = getConversationID(
+      otherUserId,
+    ); // make sure this uses a String id
+
+    await FirebaseFirestore.instance
+        .collection('chats/$cid/messages')
+        .doc(messageId)
         .update({'read': DateTime.now().millisecondsSinceEpoch.toString()});
   }
 

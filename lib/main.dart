@@ -15,8 +15,5 @@ Future<void> main() async {
   ).then((value) {
     Get.put(AuthenticationRepository());
   });
-  // if (AuthenticationRepository.instance.currentUser == null) {
-  //   // Get.to(welcome_screen());
-  // }
   runApp(const MyApp());
 }

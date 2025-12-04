@@ -16,7 +16,9 @@ class MessageCard extends StatelessWidget {
 
     final String text = (message['msg'] ?? '').toString();
     final dynamic time = message['sent'];
-    final bool isSeen = (message['isSeen'] ?? false) == true;
+
+    final String read = (message['read'] ?? '').toString();
+    final bool isSeen = read.isNotEmpty;
 
     final String? fromId = message['fromId'] as String?;
     final String myId = FirebaseAuth.instance.currentUser!.uid;
