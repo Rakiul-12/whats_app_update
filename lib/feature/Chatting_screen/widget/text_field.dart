@@ -29,10 +29,10 @@ class Text_filed extends GetView<ChatController> {
                 decoration: InputDecoration(
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(1000),
+                    borderRadius: BorderRadius.circular(30),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(1000),
+                    borderRadius: BorderRadius.circular(30),
                     borderSide: BorderSide.none,
                   ),
                   prefixIcon: IconButton(
@@ -42,39 +42,43 @@ class Text_filed extends GetView<ChatController> {
                       color: isDark ? Mycolors.light : Mycolors.dark,
                     ),
                   ),
-                  suffixIcon: SizedBox(
-                    width: 100,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          onPressed: () {},
-                          icon: Icon(
-                            Icons.camera_alt,
-                            color: isDark ? Mycolors.light : Mycolors.dark,
+                  suffixIcon: Obx(() {
+                    final bool empty = controller.message.value.isEmpty;
+
+                    return SizedBox(
+                      width: empty ? 100 : 50,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          // CAMERA BUTTON
+                          if (empty)
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () {},
+                              icon: Icon(
+                                Icons.camera_alt,
+                                color: isDark ? Mycolors.light : Mycolors.dark,
+                              ),
+                            ),
+
+                          //IMAGE BUTTON
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () {},
+                            icon: Icon(
+                              Icons.image_rounded,
+                              color: isDark ? Mycolors.light : Mycolors.dark,
+                            ),
                           ),
-                        ),
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          onPressed: () {},
-                          icon: Icon(
-                            Icons.image_rounded,
-                            color: isDark ? Mycolors.light : Mycolors.dark,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                        ],
+                      ),
+                    );
+                  }),
 
                   hintText: "Message...",
                   hintMaxLines: 1,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 18,
-                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(1000),
                     borderSide: BorderSide.none,

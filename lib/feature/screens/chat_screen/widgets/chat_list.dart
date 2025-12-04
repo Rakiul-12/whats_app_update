@@ -40,7 +40,7 @@ class chat_screen_chat_list extends StatelessWidget {
 
           return ListView.separated(
             separatorBuilder: (context, index) =>
-                SizedBox(height: Mysize.defaultSpace),
+                SizedBox(height: Mysize.spaceBtwInputFields),
             itemCount: users.length,
             itemBuilder: (context, index) {
               final user = users[index];

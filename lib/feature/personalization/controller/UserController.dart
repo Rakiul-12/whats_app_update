@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:whats_app/data/repository/authentication_repo/AuthenticationRepo.dart';
 import 'package:whats_app/data/repository/user/UserRepository.dart';
 import 'package:whats_app/feature/NavBar/navbar.dart';
@@ -21,8 +21,6 @@ class UserController extends GetxController {
   final _userRepository = Get.put(UserRepository());
   TextEditingController userName = TextEditingController();
   final _messageRepo = Get.put(Messagerepository());
-
-  // get MyFullScreenLoader => null;
 
   // Update user profile picture
   Future<void> updateUserProfilePicture() async {
@@ -127,7 +125,7 @@ class UserController extends GetxController {
           .update({
             'isOnline': isOnline,
             'lastActive': FieldValue.serverTimestamp(),
-            'pushToken': Messagerepository.me.pushToken,
+            'pushToken': Messagerepository.me.pushToken ?? '',
           });
     } catch (e) {
       print("Update active status failed: $e");
@@ -135,29 +133,29 @@ class UserController extends GetxController {
   }
 
   // getLastActiveTime
-  static String getLastActiveTime({
-    required BuildContext context,
-    required String lastActive,
-  }) {
-    final int i = int.tryParse(lastActive) ?? -1;
-    if (i == -1) return 'Last seen not available';
+  // static String getLastActiveTime({
+  //   required BuildContext context,
+  //   required String lastActive,
+  // }) {
+  //   final int i = int.tryParse(lastActive) ?? -1;
+  //   if (i == -1) return 'Last seen not available';
 
-    DateTime time = DateTime.fromMillisecondsSinceEpoch(i);
-    DateTime now = DateTime.now();
+  //   DateTime time = DateTime.fromMillisecondsSinceEpoch(i);
+  //   DateTime now = DateTime.now();
 
-    String formattedTime = TimeOfDay.fromDateTime(time).format(context);
-    if (time.day == now.day &&
-        time.month == now.month &&
-        time.year == time.year) {
-      return 'Last seen today at $formattedTime';
-    }
+  //   String formattedTime = TimeOfDay.fromDateTime(time).format(context);
+  //   if (time.day == now.day &&
+  //       time.month == now.month &&
+  //       time.year == time.year) {
+  //     return 'Last seen today at $formattedTime';
+  //   }
 
-    if ((now.difference(time).inHours / 24).round() == 1) {
-      return 'Last seen yesterday at $formattedTime';
-    }
-    String month = _getmonth(time);
-    return 'Last seen on ${time.day} $month on $formattedTime';
-  }
+  //   if ((now.difference(time).inHours / 24).round() == 1) {
+  //     return 'Last seen yesterday at $formattedTime';
+  //   }
+  //   String month = _getmonth(time);
+  //   return 'Last seen on ${time.day} $month on $formattedTime';
+  // }
 
   static String _getmonth(DateTime date) {
     switch (date.month) {
@@ -207,5 +205,33 @@ class UserController extends GetxController {
     return now.year == sent.year
         ? "$formatedTime - ${sent.day} ${_getmonth(sent)}"
         : "$formatedTime - ${sent.day} ${_getmonth(sent)} ${sent.year}";
+  }
+
+  // getLastActiveTime
+  String buildOnlineStatusText({
+    required BuildContext context,
+    required bool isOnline,
+    required String lastActive,
+  }) {
+    if (isOnline) return 'Online';
+
+    if (lastActive.isEmpty) return 'Last seen recently';
+
+    final ms = int.tryParse(lastActive);
+    if (ms == null) return 'Last seen recently';
+
+    final dt = DateTime.fromMillisecondsSinceEpoch(ms);
+    final now = DateTime.now();
+
+    final today = DateTime(now.year, now.month, now.day);
+    final thatDay = DateTime(dt.year, dt.month, dt.day);
+    final diffDays = today.difference(thatDay).inDays;
+
+    final timeStr = TimeOfDay.fromDateTime(dt).format(context);
+
+    if (diffDays == 0) return 'Last seen today at $timeStr';
+    if (diffDays == 1) return 'Last seen yesterday at $timeStr';
+
+    return 'Last seen on ${dt.day}/${dt.month}/${dt.year} at $timeStr';
   }
 }

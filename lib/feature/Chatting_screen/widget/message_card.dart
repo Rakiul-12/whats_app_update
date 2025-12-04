@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:whats_app/feature/authentication/backend/MessageRepo/MessageRepository.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
+import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
 class MessageCard extends StatelessWidget {
@@ -14,8 +15,7 @@ class MessageCard extends StatelessWidget {
     final bool isDark = MyHelperFunction.isDarkMode(context);
 
     final String text = (message['msg'] ?? '').toString();
-    final dynamic time =
-        message['sent']; // ❗ no `?? ''`, let helper handle null
+    final dynamic time = message['sent'];
     final bool isSeen = (message['isSeen'] ?? false) == true;
 
     final String? fromId = message['fromId'] as String?;
@@ -54,7 +54,7 @@ class MessageCard extends StatelessWidget {
 
             const SizedBox(height: 4),
 
-            // TIME + DAY + DOUBLE TICK
+            // TIME, DAY, DOUBLE TICK
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -65,7 +65,7 @@ class MessageCard extends StatelessWidget {
                   ),
                   style: const TextStyle(fontSize: 11, color: Colors.white70),
                 ),
-                const Text(", "),
+                SizedBox(width: Mysize.sm),
                 Text(
                   Messagerepository.getLastMessageday(
                     context: context,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marquee/marquee.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/image.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
@@ -80,14 +81,41 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+
                 if (subtitle != null)
-                  Text(
-                    subtitle!,
-                    style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                      color: isDark
-                          ? Mycolors.light
-                          : Mycolors.dark.withOpacity(0.7),
-                    ),
+                  Builder(
+                    builder: (_) {
+                      // If user is online → no marquee
+                      if (subtitle!.toLowerCase() == "online") {
+                        return Text(
+                          "Online",
+                          style: Theme.of(context).textTheme.labelLarge!
+                              .copyWith(
+                                color: isDark
+                                    ? Mycolors.light
+                                    : Mycolors.dark.withOpacity(0.7),
+                              ),
+                        );
+                      }
+
+                      // Otherwise show marquee for long "last seen..." text
+                      return SizedBox(
+                        height: 20,
+                        child: Marquee(
+                          text: subtitle!,
+                          style: Theme.of(context).textTheme.labelLarge!
+                              .copyWith(
+                                color: isDark
+                                    ? Mycolors.light
+                                    : Mycolors.dark.withOpacity(0.7),
+                              ),
+                          blankSpace: 30,
+                          velocity: 20.0,
+                          pauseAfterRound: const Duration(seconds: 2),
+                          startPadding: 10,
+                        ),
+                      );
+                    },
                   ),
               ],
             ),

@@ -9,18 +9,30 @@ class ChatController extends GetxController {
 
   final UserModel otherUser;
 
-  final TextEditingController textController = TextEditingController();
+  final textController = TextEditingController();
 
+  final RxString message = ''.obs;
   final isSending = false.obs;
 
+  @override
+  void onInit() {
+    super.onInit();
+    textController.addListener(() {
+      message.value = textController.text;
+      print("MESSAGE VALUE => '${message.value}'");
+    });
+  }
+
   Future<void> sendMessage() async {
-    final text = textController.text.trim();
-    if (text.isEmpty) return;
+    if (message.value.trim().isEmpty) return;
 
     isSending.value = true;
     try {
-      await Messagerepository.sendMessage(otherUser, text, MessageType.text);
-
+      await Messagerepository.sendMessage(
+        otherUser,
+        message.value,
+        MessageType.text,
+      );
       textController.clear();
     } finally {
       isSending.value = false;

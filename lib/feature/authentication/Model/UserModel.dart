@@ -67,8 +67,15 @@ class UserModel {
   ) {
     final data = document.data();
 
-    if (data == null) {
-      return UserModel.empty();
+    if (data == null) return UserModel.empty();
+
+    String _readTime(dynamic value) {
+      if (value == null) return '';
+      if (value is String) return value;
+      if (value is Timestamp) {
+        return value.millisecondsSinceEpoch.toString();
+      }
+      return '';
     }
 
     return UserModel(
@@ -78,10 +85,10 @@ class UserModel {
       phoneNumber: data['phoneNumber'] ?? '',
       profilePicture: data['profilePicture'] ?? '',
       about: data['about'] ?? "Hi, there I'm using WhatsApp",
-      createdAt: data['createdAt'] ?? '',
+      createdAt: _readTime(data['createdAt']),
       isOnline: data['isOnline'] ?? false,
       pushToken: data['pushToken'] ?? '',
-      lastActive: data['lastActive'] ?? '',
+      lastActive: _readTime(data['lastActive']),
       publicId: data['publicId'] ?? '',
     );
   }
