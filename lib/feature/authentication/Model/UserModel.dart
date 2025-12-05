@@ -69,7 +69,7 @@ class UserModel {
 
     if (data == null) return UserModel.empty();
 
-    String _readTime(dynamic value) {
+    String readTime(dynamic value) {
       if (value == null) return '';
       if (value is String) return value;
       if (value is Timestamp) {
@@ -85,10 +85,10 @@ class UserModel {
       phoneNumber: data['phoneNumber'] ?? '',
       profilePicture: data['profilePicture'] ?? '',
       about: data['about'] ?? "Hi, there I'm using WhatsApp",
-      createdAt: _readTime(data['createdAt']),
+      createdAt: readTime(data['createdAt']),
       isOnline: data['isOnline'] ?? false,
       pushToken: data['pushToken'] ?? '',
-      lastActive: _readTime(data['lastActive']),
+      lastActive: readTime(data['lastActive']),
       publicId: data['publicId'] ?? '',
     );
   }

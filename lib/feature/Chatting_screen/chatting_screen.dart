@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // 👈 add this
+import 'package:firebase_auth/firebase_auth.dart'; 
 import 'package:whats_app/common/widget/chatting_app_bar/chatting_app_bar.dart';
 import 'package:whats_app/feature/Chatting_screen/widget/message_card.dart';
 import 'package:whats_app/feature/Chatting_screen/widget/text_field.dart';
@@ -90,20 +90,22 @@ class ChattingScreen extends StatelessWidget {
                         reverse: true,
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
-                          final doc = messages[index];
-                          final msg = doc.data();
-                          final messageId = doc.id;
+                        final doc = messages[index];
+                        final msg = doc.data();
 
-                          if (msg['fromId'] != myId &&
-                              (msg['read'] == null || msg['read'] == '')) {
-                            Messagerepository.markMessageAsRead(
-                              otherUser.id,
-                              messageId,
-                            );
-                          }
+                        final myId = FirebaseAuth.instance.currentUser!.uid;
+                        final fromId = msg['fromId'];
+                        final toId = msg['toId'];
+                        final read = msg['read'] ?? '';
+
+ 
+                        if (toId == myId && fromId != myId && read.isEmpty) {
+                        Messagerepository.markMessageAsRead(otherUser.id, doc.id);
+                        }
 
                           return MessageCard(message: msg);
                         },
+
                       );
                     },
                   ),

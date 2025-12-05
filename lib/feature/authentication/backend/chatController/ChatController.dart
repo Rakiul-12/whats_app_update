@@ -19,7 +19,6 @@ class ChatController extends GetxController {
     super.onInit();
     textController.addListener(() {
       message.value = textController.text;
-      print("MESSAGE VALUE => '${message.value}'");
     });
   }
 

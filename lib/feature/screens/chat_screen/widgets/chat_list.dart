@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:whats_app/data/repository/user/UserRepository.dart';
 import 'package:whats_app/feature/Chatting_screen/chatting_screen.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
+import 'package:whats_app/feature/authentication/backend/MessageRepo/MessageRepository.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/image.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
@@ -16,6 +17,7 @@ class chat_screen_chat_list extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(UserRepository());
     final isDark = MyHelperFunction.isDarkMode(context);
+    final messageRepo = Get.put(Messagerepository());
     return Expanded(
       child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: controller.getAllUsersStream(),
@@ -44,7 +46,7 @@ class chat_screen_chat_list extends StatelessWidget {
             itemCount: users.length,
             itemBuilder: (context, index) {
               final user = users[index];
-
+              
               return ListTile(
                 onTap: () {
                   // Go to chat screen with this user
@@ -56,7 +58,9 @@ class chat_screen_chat_list extends StatelessWidget {
                       ? NetworkImage(user.profilePicture)
                       : AssetImage(MyImage.onProfileScreen) as ImageProvider,
                 ),
-                title: Text(
+                
+                title:
+                 Text(
                   user.username,
                   style: Theme.of(context).textTheme.titleLarge!.copyWith(
                     color: isDark
@@ -64,16 +68,33 @@ class chat_screen_chat_list extends StatelessWidget {
                         : Mycolors.textPrimary,
                   ),
                 ),
-                subtitle: Text(
-                  user.about,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                    color: isDark
-                        ? Mycolors.borderPrimary
-                        : Mycolors.textPrimary,
-                  ),
+                subtitle: StreamBuilder(
+                stream: Messagerepository.GetLastMessage(user),
+                builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Text(
+                    user.about,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  );
+                }
+
+                final data = snapshot.data!.docs.first.data();
+
+                final String lastMsg = data['msg'] ?? '';
+                final dynamic time = data['sent'];
+
+                return Text(
+                lastMsg,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                color: isDark ? Mycolors.borderPrimary : Mycolors.textPrimary,
+                    ),
+                  );
+                },
                 ),
+
                 trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,

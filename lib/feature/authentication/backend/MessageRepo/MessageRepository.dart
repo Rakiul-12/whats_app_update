@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:whats_app/binding/binding.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
-import 'package:whats_app/feature/personalization/Model/MessageModel.dart';
 
 class Messagerepository extends GetxController {
   static Messagerepository get instance => Get.find();
@@ -163,16 +162,20 @@ class Messagerepository extends GetxController {
 
   // GetLastMessage
   static Stream<QuerySnapshot<Map<String, dynamic>>> GetLastMessage(
-    UserModel user,
-  ) {
-    return FirebaseFirestore.instance
-        .collection("chats/${getConversationID(user.id)}/messages/")
-        .orderBy("sent", descending: true)
-        .limit(1)
-        .snapshots();
-  }
+  UserModel user,
+) {
+  final cid = getConversationID(user.id);
 
-  static String getLastMessageTime({
+  return FirebaseFirestore.instance
+      .collection("chats")
+      .doc(cid)
+      .collection("messages")
+      .orderBy("sent", descending: true)
+      .limit(1)
+      .snapshots();
+}
+
+  static String getLastMessageTime(String id, {
     required BuildContext context,
     required String time,
     bool showYear = false,

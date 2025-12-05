@@ -23,7 +23,7 @@ class Message {
       'fromId': fromId,
       'msg': msg,
       'read': read,
-      'type': type.name, // save as "text", "image", etc.
+      'type': type.name,
       'sent': sent,
     };
   }
