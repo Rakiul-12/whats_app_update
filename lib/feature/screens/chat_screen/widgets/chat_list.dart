@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:whats_app/data/repository/user/UserRepository.dart';
@@ -45,92 +46,117 @@ class chat_screen_chat_list extends StatelessWidget {
                 SizedBox(height: Mysize.spaceBtwInputFields),
             itemCount: users.length,
             itemBuilder: (context, index) {
-              final user = users[index];
-              
-              return ListTile(
-                onTap: () {
-                  // Go to chat screen with this user
-                  Get.to(() => ChattingScreen(), arguments: user);
-                },
-                leading: CircleAvatar(
-                  radius: 24,
-                  backgroundImage: user.profilePicture.isNotEmpty
-                      ? NetworkImage(user.profilePicture)
-                      : AssetImage(MyImage.onProfileScreen) as ImageProvider,
-                ),
-                
-                title:
-                 Text(
-                  user.username,
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
+  final user = users[index];
+  final String myId = FirebaseAuth.instance.currentUser!.uid;
+
+  return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    stream: Messagerepository.GetLastMessage(user),
+    builder: (context, lastSnap) {
+      String subtitleText = user.about;     
+      String timeText = '';                
+      FontWeight nameWeight = FontWeight.normal;
+
+      if (lastSnap.hasData && lastSnap.data!.docs.isNotEmpty) {
+        final lastDoc = lastSnap.data!.docs.first;
+        final data = lastDoc.data();
+
+        final String lastMsg = (data['msg'] ?? '').toString();
+        final dynamic sentTime = data['sent'];
+        final String read = (data['read'] ?? '').toString();
+        final String fromId = (data['fromId'] ?? '').toString();
+        final String toId = (data['toId'] ?? '').toString();
+
+        // show last message text
+        subtitleText = lastMsg;
+
+        // formatted time of last message
+        timeText = Messagerepository.getFormattedTime(
+          context: context,
+          time: sentTime,
+        );
+
+        // unread message check
+        final bool isUnread = (toId == myId) && read.isEmpty;
+        nameWeight = isUnread ? FontWeight.bold : FontWeight.normal;
+      }
+
+      return ListTile(
+        onTap: () {
+          Get.to(() => const ChattingScreen(), arguments: user);
+        },
+        leading: CircleAvatar(
+          radius: 24,
+          backgroundImage: user.profilePicture.isNotEmpty
+              ? NetworkImage(user.profilePicture)
+              : const AssetImage(MyImage.onProfileScreen) as ImageProvider,
+        ),
+
+        // bold if last message is unread
+        title: Text(
+          user.username,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                color: isDark
+                    ? Mycolors.borderPrimary
+                    : Mycolors.textPrimary,
+                fontWeight: nameWeight,
+              ),
+        ),
+
+        // LAST MESSAGE  ABOUT
+        subtitle: Text(
+          subtitleText,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+          style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                color: isDark
+                    ? Mycolors.borderPrimary
+                    : Mycolors.textPrimary,
+              ),
+        ),
+
+        // TIME 
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              timeText,
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
                     color: isDark
                         ? Mycolors.borderPrimary
                         : Mycolors.textPrimary,
                   ),
+            ),
+            const SizedBox(height: 6),
+
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 4,
+              ),
+              decoration: const BoxDecoration(
+                color: Mycolors.success,
+                shape: BoxShape.circle,
+              ),
+              child: const Text(
+                "3",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
                 ),
-                subtitle: StreamBuilder(
-                stream: Messagerepository.GetLastMessage(user),
-                builder: (context, snapshot) {
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Text(
-                    user.about,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  );
-                }
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+},
 
-                final data = snapshot.data!.docs.first.data();
-
-                final String lastMsg = data['msg'] ?? '';
-                final dynamic time = data['sent'];
-
-                return Text(
-                lastMsg,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                color: isDark ? Mycolors.borderPrimary : Mycolors.textPrimary,
-                    ),
-                  );
-                },
-                ),
-
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "12:45 AM",
-                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                        color: isDark
-                            ? Mycolors.borderPrimary
-                            : Mycolors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 4,
-                      ),
-                      decoration: const BoxDecoration(
-                        color: Mycolors.success,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Text(
-                        "3",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
           );
         },
       ),
