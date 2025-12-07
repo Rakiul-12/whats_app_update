@@ -51,14 +51,31 @@ class MessageCard extends StatelessWidget {
           children: [
             // text OR image
             if (isImage)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  text,
-                  width: 280,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
-                      const Icon(Icons.broken_image, color: Colors.white70),
+              GestureDetector(
+                onTap: () {},
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    text,
+                    width: 280,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingprogress) {
+                      if (loadingprogress == null) return child;
+                      return Container(
+                        width: 220,
+                        height: 220,
+                        color: Colors.black26,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.broken_image, color: Colors.white70),
+                  ),
                 ),
               )
             else

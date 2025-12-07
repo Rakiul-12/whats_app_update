@@ -39,7 +39,7 @@ class Text_filed extends GetView<ChatController> {
                   prefixIcon: IconButton(
                     onPressed: () {},
                     icon: Icon(
-                      Icons.emoji_emotions,
+                      Icons.mic,
                       color: isDark ? Mycolors.light : Mycolors.dark,
                     ),
                   ),

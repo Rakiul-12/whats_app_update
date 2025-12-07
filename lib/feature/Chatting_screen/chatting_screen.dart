@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:whats_app/common/widget/chatting_app_bar/chatting_app_bar.dart';
+import 'package:whats_app/feature/Chatting_screen/widget/call_page.dart';
 import 'package:whats_app/feature/Chatting_screen/widget/message_card.dart';
 import 'package:whats_app/feature/Chatting_screen/widget/text_field.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
@@ -64,6 +65,11 @@ class ChattingScreen extends StatelessWidget {
             avatarImage: liveUser.profilePicture.isNotEmpty
                 ? NetworkImage(liveUser.profilePicture)
                 : const AssetImage(MyImage.onProfileScreen),
+            onVideoCall: () {
+              Get.to(() => CallPage(otherUser: otherUser, isVideoCall: true));
+            },
+            onVoiceCall: () =>
+                CallPage(otherUser: otherUser, isVideoCall: false),
           ),
           body: SafeArea(
             child: Column(
@@ -90,22 +96,23 @@ class ChattingScreen extends StatelessWidget {
                         reverse: true,
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
-                        final doc = messages[index];
-                        final msg = doc.data();
+                          final doc = messages[index];
+                          final msg = doc.data();
 
-                        final myId = FirebaseAuth.instance.currentUser!.uid;
-                        final fromId = msg['fromId'];
-                        final toId = msg['toId'];
-                        final read = msg['read'] ?? '';
+                          final myId = FirebaseAuth.instance.currentUser!.uid;
+                          final fromId = msg['fromId'];
+                          final toId = msg['toId'];
+                          final read = msg['read'] ?? '';
 
- 
-                        if (toId == myId && fromId != myId && read.isEmpty) {
-                        Messagerepository.markMessageAsRead(otherUser.id, doc.id);
-                        }
+                          if (toId == myId && fromId != myId && read.isEmpty) {
+                            Messagerepository.markMessageAsRead(
+                              otherUser.id,
+                              doc.id,
+                            );
+                          }
 
                           return MessageCard(message: msg);
                         },
-
                       );
                     },
                   ),
