@@ -38,7 +38,7 @@ class UserModel {
     email: "",
     phoneNumber: "",
     profilePicture: "",
-    about: "Hi, there I'm using WhatsApp",
+    about: "Hi, there I'm using WhatsApp.",
     createdAt: "",
     isOnline: true,
     pushToken: "",

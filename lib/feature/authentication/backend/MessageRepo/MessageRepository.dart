@@ -162,64 +162,97 @@ class Messagerepository extends GetxController {
 
   // GetLastMessage
   static Stream<QuerySnapshot<Map<String, dynamic>>> GetLastMessage(
-  UserModel user,
-) {
-  final cid = getConversationID(user.id);
+    UserModel user,
+  ) {
+    final cid = getConversationID(user.id);
 
-  return FirebaseFirestore.instance
-      .collection("chats")
-      .doc(cid)
-      .collection("messages")
-      .orderBy("sent", descending: true)
-      .limit(1)
-      .snapshots();
-}
+    return FirebaseFirestore.instance
+        .collection("chats")
+        .doc(cid)
+        .collection("messages")
+        .orderBy("sent", descending: true)
+        .limit(1)
+        .snapshots();
+  }
 
-  static String getLastMessageTime(String id, {
+  // getLastMessageTime
+  static String getLastMessageTime({
     required BuildContext context,
-    required String time,
+    required dynamic time,
     bool showYear = false,
   }) {
-    final DateTime sent = DateTime.fromMillisecondsSinceEpoch(int.parse(time));
+    if (time == null) return '';
+
+    DateTime sent;
+
+    // time comes as Firestore Timestamp
+    if (time is Timestamp) {
+      sent = time.toDate();
+    }
+    // time stored as string milliseconds
+    else if (time is String && int.tryParse(time) != null) {
+      sent = DateTime.fromMillisecondsSinceEpoch(int.parse(time));
+    }
+    // already DateTime
+    else if (time is DateTime) {
+      sent = time;
+    } else {
+      return '';
+    }
+
     final DateTime now = DateTime.now();
 
+    // Same day
     if (now.day == sent.day &&
         now.month == sent.month &&
         now.year == sent.year) {
       return TimeOfDay.fromDateTime(sent).format(context);
     }
+
+    // Yesterday
+    final yesterday = now.subtract(const Duration(days: 1));
+    if (sent.day == yesterday.day &&
+        sent.month == yesterday.month &&
+        sent.year == yesterday.year) {
+      return "Yesterday";
+    }
+
+    // Show full date
     return showYear
         ? "${sent.day} ${_getMonth(sent)} ${sent.year}"
         : "${sent.day} ${_getMonth(sent)}";
   }
 
   static String _getMonth(DateTime date) {
-    switch (date.month) {
-      case 1:
-        return "Jan";
-      case 2:
-        return "Feb";
-      case 3:
-        return "Mar";
-      case 4:
-        return "Apr";
-      case 5:
-        return "May";
-      case 6:
-        return "Jun";
-      case 7:
-        return "Jul";
-      case 8:
-        return "Aug";
-      case 9:
-        return "Sep";
-      case 10:
-        return "Oct";
-      case 11:
-        return "Nov";
-      case 12:
-        return "Dec";
-    }
-    return "";
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return months[date.month - 1];
+  }
+
+  // unread message count for chat
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getUnreadMessage(
+    UserModel user,
+  ) {
+    final myId = FirebaseAuth.instance.currentUser!.uid;
+    final cid = getConversationID(user.id);
+    return FirebaseFirestore.instance
+        .collection('chats')
+        .doc(cid)
+        .collection('messages')
+        .where('toId', isEqualTo: myId)
+        .where('read', isEqualTo: '')
+        .snapshots();
   }
 }

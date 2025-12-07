@@ -18,7 +18,7 @@ class chat_screen_chat_list extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(UserRepository());
     final isDark = MyHelperFunction.isDarkMode(context);
-    final messageRepo = Get.put(Messagerepository());
+
     return Expanded(
       child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: controller.getAllUsersStream(),
@@ -36,7 +36,6 @@ class chat_screen_chat_list extends StatelessWidget {
 
           final docs = snapshot.data!.docs;
 
-          // Convert each document to UserModel
           final List<UserModel> users = docs
               .map((doc) => UserModel.fromSnapshot(doc))
               .toList();
@@ -46,117 +45,147 @@ class chat_screen_chat_list extends StatelessWidget {
                 SizedBox(height: Mysize.spaceBtwInputFields),
             itemCount: users.length,
             itemBuilder: (context, index) {
-  final user = users[index];
-  final String myId = FirebaseAuth.instance.currentUser!.uid;
+              final user = users[index];
+              final String myId = FirebaseAuth.instance.currentUser!.uid;
 
-  return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-    stream: Messagerepository.GetLastMessage(user),
-    builder: (context, lastSnap) {
-      String subtitleText = user.about;     
-      String timeText = '';                
-      FontWeight nameWeight = FontWeight.normal;
+              return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: Messagerepository.GetLastMessage(user),
+                builder: (context, lastSnap) {
+                  String subtitleText = user.about; // default
+                  String timeText = ''; // default
+                  FontWeight nameWeight = FontWeight.normal;
 
-      if (lastSnap.hasData && lastSnap.data!.docs.isNotEmpty) {
-        final lastDoc = lastSnap.data!.docs.first;
-        final data = lastDoc.data();
+                  if (lastSnap.hasData && lastSnap.data!.docs.isNotEmpty) {
+                    final lastDoc = lastSnap.data!.docs.first;
+                    final data = lastDoc.data();
 
-        final String lastMsg = (data['msg'] ?? '').toString();
-        final dynamic sentTime = data['sent'];
-        final String read = (data['read'] ?? '').toString();
-        final String fromId = (data['fromId'] ?? '').toString();
-        final String toId = (data['toId'] ?? '').toString();
+                    final String lastMsg = (data['msg'] ?? '').toString();
+                    final dynamic sentTime = data['sent'];
+                    final String read = (data['read'] ?? '').toString();
+                    final String toId = (data['toId'] ?? '').toString();
 
-        // show last message text
-        subtitleText = lastMsg;
+                    subtitleText = lastMsg;
 
-        // formatted time of last message
-        timeText = Messagerepository.getFormattedTime(
-          context: context,
-          time: sentTime,
-        );
+                    timeText = Messagerepository.getLastMessageTime(
+                      context: context,
+                      time: sentTime,
+                    );
 
-        // unread message check
-        final bool isUnread = (toId == myId) && read.isEmpty;
-        nameWeight = isUnread ? FontWeight.bold : FontWeight.normal;
-      }
+                    // basic unread (using last message)
+                    final bool isUnread = (toId == myId) && read.isEmpty;
+                    nameWeight = isUnread ? FontWeight.bold : FontWeight.normal;
+                  }
 
-      return ListTile(
-        onTap: () {
-          Get.to(() => const ChattingScreen(), arguments: user);
-        },
-        leading: CircleAvatar(
-          radius: 24,
-          backgroundImage: user.profilePicture.isNotEmpty
-              ? NetworkImage(user.profilePicture)
-              : const AssetImage(MyImage.onProfileScreen) as ImageProvider,
-        ),
+                  // 🔥 second stream: unread count
+                  return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: Messagerepository.getUnreadMessage(user),
+                    builder: (context, unreadSnap) {
+                      int unreadCount = 0;
+                      if (unreadSnap.hasData &&
+                          unreadSnap.data != null &&
+                          unreadSnap.data!.docs.isNotEmpty) {
+                        unreadCount = unreadSnap.data!.docs.length;
+                      }
 
-        // bold if last message is unread
-        title: Text(
-          user.username,
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                color: isDark
-                    ? Mycolors.borderPrimary
-                    : Mycolors.textPrimary,
-                fontWeight: nameWeight,
-              ),
-        ),
+                      final bool hasUnread = unreadCount > 0;
 
-        // LAST MESSAGE  ABOUT
-        subtitle: Text(
-          subtitleText,
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
-          style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                color: isDark
-                    ? Mycolors.borderPrimary
-                    : Mycolors.textPrimary,
-              ),
-        ),
+                      final FontWeight effectiveNameWeight = hasUnread
+                          ? FontWeight.bold
+                          : nameWeight;
 
-        // TIME 
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              timeText,
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                    color: isDark
-                        ? Mycolors.borderPrimary
-                        : Mycolors.textPrimary,
-                  ),
-            ),
-            const SizedBox(height: 6),
+                      final FontWeight subtitleWeight = hasUnread
+                          ? FontWeight.bold
+                          : FontWeight.normal;
 
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 4,
-              ),
-              decoration: const BoxDecoration(
-                color: Mycolors.success,
-                shape: BoxShape.circle,
-              ),
-              child: const Text(
-                "3",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-},
+                      final FontWeight timeWeight = hasUnread
+                          ? FontWeight.bold
+                          : FontWeight.normal;
 
+                      return ListTile(
+                        onTap: () {
+                          Get.to(() => const ChattingScreen(), arguments: user);
+                        },
+                        leading: CircleAvatar(
+                          radius: 24,
+                          backgroundImage: user.profilePicture.isNotEmpty
+                              ? NetworkImage(user.profilePicture)
+                              : const AssetImage(MyImage.onProfileScreen)
+                                    as ImageProvider,
+                        ),
+
+                        // USER NAME
+                        title: Text(
+                          user.username,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: Theme.of(context).textTheme.titleLarge!
+                              .copyWith(
+                                color: isDark
+                                    ? Mycolors.borderPrimary
+                                    : Mycolors.textPrimary,
+                                fontWeight: effectiveNameWeight,
+                              ),
+                        ),
+
+                        // LAST MESSAGE AND ABOUT
+                        subtitle: Text(
+                          subtitleText,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: Theme.of(context).textTheme.bodyLarge!
+                              .copyWith(
+                                color: isDark
+                                    ? Mycolors.borderPrimary
+                                    : Mycolors.textPrimary,
+                                fontWeight: subtitleWeight,
+                              ),
+                        ),
+
+                        // TIME AND UNREAD COUNT
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              timeText,
+                              style: Theme.of(context).textTheme.bodySmall!
+                                  .copyWith(
+                                    color: isDark
+                                        ? Mycolors.borderPrimary
+                                        : Mycolors.textPrimary,
+                                    fontWeight: timeWeight,
+                                  ),
+                            ),
+                            const SizedBox(height: 6),
+
+                            if (hasUnread)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 4,
+                                ),
+                                decoration: const BoxDecoration(
+                                  color: Mycolors.success,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  unreadCount.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            },
           );
         },
       ),
