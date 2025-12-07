@@ -51,8 +51,8 @@ class chat_screen_chat_list extends StatelessWidget {
               return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: Messagerepository.GetLastMessage(user),
                 builder: (context, lastSnap) {
-                  String subtitleText = user.about; // default
-                  String timeText = ''; // default
+                  String subtitleText = user.about;
+                  String timeText = '';
                   FontWeight nameWeight = FontWeight.normal;
 
                   if (lastSnap.hasData && lastSnap.data!.docs.isNotEmpty) {
@@ -71,12 +71,12 @@ class chat_screen_chat_list extends StatelessWidget {
                       time: sentTime,
                     );
 
-                    // basic unread (using last message)
+                    // basic unread and using last message
                     final bool isUnread = (toId == myId) && read.isEmpty;
                     nameWeight = isUnread ? FontWeight.bold : FontWeight.normal;
                   }
 
-                  // 🔥 second stream: unread count
+                  //:unread count
                   return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                     stream: Messagerepository.getUnreadMessage(user),
                     builder: (context, unreadSnap) {

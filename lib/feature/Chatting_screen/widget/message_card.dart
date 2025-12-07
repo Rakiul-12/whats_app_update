@@ -16,20 +16,23 @@ class MessageCard extends StatelessWidget {
 
     final String text = (message['msg'] ?? '').toString();
     final dynamic time = message['sent'];
-
-    final String read = (message['read'] ?? '').toString();
-    final bool isSeen = (message['read'] ?? '').isNotEmpty;
-
+    final bool isSeen = (message['read'] ?? '').toString().isNotEmpty;
 
     final String? fromId = message['fromId'] as String?;
     final String myId = FirebaseAuth.instance.currentUser!.uid;
     final bool isSentByMe = fromId == myId;
 
+    final String type = (message['type'] ?? 'text').toString();
+    final bool isImage = type == 'image';
+
     return Align(
       alignment: isSentByMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+        padding: EdgeInsets.symmetric(
+          vertical: isImage ? 6 : 10,
+          horizontal: isImage ? 6 : 14,
+        ),
         decoration: BoxDecoration(
           color: isSentByMe
               ? const Color.fromARGB(255, 119, 170, 122)
@@ -46,18 +49,30 @@ class MessageCard extends StatelessWidget {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
-            // MAIN MESSAGE TEXT
-            Text(
-              text,
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                color: Mycolors.light,
-                fontSize: 15,
+            // text OR image
+            if (isImage)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  text,
+                  width: 280,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      const Icon(Icons.broken_image, color: Colors.white70),
+                ),
+              )
+            else
+              Text(
+                text,
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                  color: Mycolors.light,
+                  fontSize: 15,
+                ),
               ),
-            ),
 
             const SizedBox(height: 4),
 
-            // TIME, DAY, DOUBLE TICK
+            // TIME + DOUBLE TICK
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [

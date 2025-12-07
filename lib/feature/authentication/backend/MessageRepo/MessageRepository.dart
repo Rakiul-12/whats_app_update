@@ -1,20 +1,27 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:dio/dio.dart' as dio;
+
+import 'package:image_picker/image_picker.dart';
 import 'package:whats_app/binding/binding.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
+import 'package:whats_app/feature/authentication/backend/chatController/ChatController.dart';
+import 'package:whats_app/utiles/popup/SnackbarHepler.dart';
 
 class Messagerepository extends GetxController {
   static Messagerepository get instance => Get.find();
 
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
-
-  // Firebase Messaging instance
+  // final _chatController = Get.put(ChatController);
   static FirebaseMessaging fMessaging = FirebaseMessaging.instance;
 
+  // final UserModel otherUser = Get.arguments as UserModel;
+  final isSending = false.obs;
   static late UserModel me;
 
   /// Call this after  UserModel
@@ -76,6 +83,7 @@ class Messagerepository extends GetxController {
           'read': '',
           'type': type.name,
           'sent': FieldValue.serverTimestamp(),
+          'publicId': '',
         });
   }
 
@@ -255,4 +263,93 @@ class Messagerepository extends GetxController {
         .where('read', isEqualTo: '')
         .snapshots();
   }
+
+  // sent image and upload to cloudinary
+  Future<void> sendImageMessage({
+    required UserModel otherUser,
+    required Future<dio.Response> Function(File file) uploadFn,
+  }) async {
+    try {
+      // Pick image
+      final XFile? picked = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxHeight: 1024,
+        maxWidth: 1024,
+      );
+      if (picked == null) return;
+
+      final file = File(picked.path);
+      isSending.value = true;
+
+      // Upload to Cloudinary (uses the function you pass in)
+      final dio.Response res = await uploadFn(file);
+
+      debugPrint("Cloudinary Response: ${res.data}");
+
+      if (res.statusCode != 200 || res.data == null) {
+        throw "Upload failed with status ${res.statusCode}";
+      }
+
+      //  Safely parse response
+      late final Map<String, dynamic> data;
+
+      if (res.data is Map<String, dynamic>) {
+        data = res.data as Map<String, dynamic>;
+      } else if (res.data is Map) {
+        data = Map<String, dynamic>.from(res.data as Map);
+      } else {
+        throw "Invalid Cloudinary response: ${res.data.runtimeType}";
+      }
+
+      final String imageUrl = (data["secure_url"] ?? data["url"] ?? "")
+          .toString();
+
+      if (imageUrl.isEmpty) {
+        throw "Uploaded image URL is missing.";
+      }
+
+      final String? publicId = data["public_id"]?.toString();
+
+      //  Now send the image message into chat
+      await Messagerepository.sendMessage(
+        otherUser,
+        imageUrl,
+        MessageType.image,
+      );
+
+      debugPrint("Image message sent: $imageUrl (publicId = $publicId)");
+    } catch (e, st) {
+      debugPrint("sendImageMessage error: $e\n$st");
+      MySnackBarHelpers.errorSnackBar(
+        title: "Image Send Failed",
+        message: e.toString(),
+      );
+    } finally {
+      isSending.value = false;
+    }
+  }
+
+  // // update image in firestore
+  // Future<void> updateSingleField(Map<String, dynamic> map) async {
+  //   try {
+  //     final uid = AuthenticationRepository.instance.currentUser!.uid;
+
+  //     await FirebaseFirestore.instance
+  //         .collection('chats')
+  //         .doc(uid)
+  //         .collection('messages')
+  //         .doc(uid)
+  //         .set(map, SetOptions(merge: true));
+  //   } on FirebaseAuthException catch (e) {
+  //     throw MyFirebaseAuthException(e.code).message;
+  //   } on FirebaseException catch (e) {
+  //     throw MyFirebaseException(e.code).message;
+  //   } on FormatException catch (_) {
+  //     throw MyFormatException();
+  //   } on PlatformException catch (e) {
+  //     throw MyPlatformException(e.code).message;
+  //   } catch (e) {
+  //     throw "Something went wrong.Please try again";
+  //   }
+  // }
 }

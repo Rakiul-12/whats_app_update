@@ -7,6 +7,7 @@ class Message {
   final String read;
   final MessageType type;
   final String sent;
+  String publicId;
 
   Message({
     required this.toId,
@@ -15,6 +16,7 @@ class Message {
     required this.read,
     required this.type,
     required this.sent,
+    required this.publicId,
   });
 
   Map<String, dynamic> toJson() {
@@ -25,6 +27,7 @@ class Message {
       'read': read,
       'type': type.name,
       'sent': sent,
+      'publicId': publicId,
     };
   }
 
@@ -39,6 +42,7 @@ class Message {
         orElse: () => MessageType.text,
       ),
       sent: json['sent'],
+      publicId: json['publicId'],
     );
   }
 }

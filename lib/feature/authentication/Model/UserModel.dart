@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
-  // keep final which do not want to update
   final String id;
   String phoneNumber;
   String about;

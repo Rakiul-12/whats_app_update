@@ -166,15 +166,4 @@ class UserRepository extends GetxController {
   Stream<QuerySnapshot<Map<String, dynamic>>> getAllUsersStream() {
     return _Db.collection(MyKeys.userCollection).snapshots();
   }
-
-  // static Future<void> MakeMessageAsRead(
-  //   String chatUserId,
-  //   String MessageId,
-  // ) async {
-  //   final cid = getConversationID(chatUserId);
-  //   await FirebaseFirestore.instance
-  //       .collection("chats/$cid/messages")
-  //       .doc(MessageId)
-  //       .update({'read': DateTime.now().millisecondsSinceEpoch.toString()});
-  // }
 }

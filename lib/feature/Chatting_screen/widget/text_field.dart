@@ -10,6 +10,7 @@ class Text_filed extends GetView<ChatController> {
   @override
   Widget build(BuildContext context) {
     final bool isDark = MyHelperFunction.isDarkMode(context);
+    final controller = Get.put(ChatController.instance);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, left: 4, right: 4),
@@ -54,8 +55,8 @@ class Text_filed extends GetView<ChatController> {
                           if (empty)
                             IconButton(
                               padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              onPressed: () {},
+                              constraints: BoxConstraints(),
+                              onPressed: controller.GetCameraAccess,
                               icon: Icon(
                                 Icons.camera_alt,
                                 color: isDark ? Mycolors.light : Mycolors.dark,
@@ -65,8 +66,8 @@ class Text_filed extends GetView<ChatController> {
                           //IMAGE BUTTON
                           IconButton(
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: () {},
+                            constraints: BoxConstraints(),
+                            onPressed: controller.sendImageFromChat,
                             icon: Icon(
                               Icons.image_rounded,
                               color: isDark ? Mycolors.light : Mycolors.dark,
@@ -84,17 +85,17 @@ class Text_filed extends GetView<ChatController> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: const Color.fromARGB(146, 78, 75, 75),
+                  fillColor: Color.fromARGB(146, 78, 75, 75),
                 ),
               ),
             ),
           ),
 
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
 
           // SEND BUTTON
           Padding(
-            padding: const EdgeInsets.only(right: 10),
+            padding: EdgeInsets.only(right: 10),
             child: Obx(
               () => GestureDetector(
                 onTap: controller.isSending.value
@@ -105,19 +106,19 @@ class Text_filed extends GetView<ChatController> {
                 child: Container(
                   height: 50,
                   width: 50,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Colors.green,
                     shape: BoxShape.circle,
                   ),
                   child: controller.isSending.value
-                      ? const Padding(
+                      ? Padding(
                           padding: EdgeInsets.all(12.0),
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.send, color: Colors.white),
+                      : Icon(Icons.send, color: Colors.white),
                 ),
               ),
             ),
