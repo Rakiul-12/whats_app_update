@@ -1,5 +1,8 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:get/get.dart';
 
 class NotificationService {
   NotificationService._();
@@ -8,51 +11,115 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  Future<void> initLocalNotifications() async {
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const settings = InitializationSettings(android: androidInit);
+  static const String _channelId = 'chat_channel_id';
+  static const String _channelName = 'Chat Messages';
+  static const String _channelDesc = 'Notifications for chat messages';
 
-    await _plugin.initialize(settings);
+  bool _initialized = false;
+
+  Future<void> initLocalNotifications() async {
+    if (_initialized) return;
+
+    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const initSettings = InitializationSettings(android: androidInit);
+
+    await _plugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        debugPrint(" Notification tapped payload: ${response.payload}");
+
+        // If you want to open chat on tap:
+        // if (response.payload != null && response.payload!.isNotEmpty) {
+        //   final data = jsonDecode(response.payload!);
+        //   // Get.to(() => ChattingScreen(), arguments: userModel);
+        // }
+      },
+    );
+
+    // Create channel (Android)
+    const androidChannel = AndroidNotificationChannel(
+      _channelId,
+      _channelName,
+      description: _channelDesc,
+      importance: Importance.max,
+    );
+
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    await androidPlugin?.createNotificationChannel(androidChannel);
+
+    _initialized = true;
   }
 
-  /// Call once from main() AFTER initLocalNotifications()
-  void initFcmListeners() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      //  if you sent data
-      final data = message.data;
+  Future<void> requestAndroidPermissionIfNeeded() async {
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
-      //  if you sent notification payload
-      final notif = message.notification;
-
-      final title =
-          data['senderName']?.toString() ?? notif?.title ?? 'New message';
-
-      final body = data['message']?.toString() ?? notif?.body ?? '';
-
-      showChatNotification(
-        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title: title,
-        body: body,
-      );
-    });
+    await androidPlugin?.requestNotificationsPermission();
   }
 
   Future<void> showChatNotification({
-    required int id,
     required String title,
     required String body,
-    String? payload,
+    Map<String, dynamic>? data,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
-      'chat_channel_id',
-      'Chat Messages',
-      channelDescription: 'Notifications for chat messages',
+    await initLocalNotifications();
+
+    final androidDetails = AndroidNotificationDetails(
+      _channelId,
+      _channelName,
+      channelDescription: _channelDesc,
       importance: Importance.max,
       priority: Priority.high,
+      styleInformation: const BigTextStyleInformation(''),
     );
 
-    const details = NotificationDetails(android: androidDetails);
+    final details = NotificationDetails(android: androidDetails);
 
-    await _plugin.show(id, title, body, details, payload: payload);
+    final payload = data == null ? '' : jsonEncode(data);
+
+    await _plugin.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      details,
+      payload: payload,
+    );
+  }
+
+  void initFcmListeners() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      debugPrint(" onMessage CALLED");
+      debugPrint(" data: ${message.data}");
+      debugPrint(
+        " notif: ${message.notification?.title} | ${message.notification?.body}",
+      );
+
+      //  IMPORTANT: for Firebase Console notification messages, data is {}
+      final title =
+          message.notification?.title ??
+          message.data['senderName'] ??
+          'Message';
+      final body =
+          message.notification?.body ??
+          message.data['message'] ??
+          'New message';
+
+      await showChatNotification(
+        title: title,
+        body: body,
+        data: message.data.isEmpty ? null : message.data,
+      );
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      debugPrint("📩 Opened from notification: ${message.data}");
+    });
   }
 }

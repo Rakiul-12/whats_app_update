@@ -50,12 +50,12 @@ class chat_screen extends StatelessWidget {
         width: Mysize.floatingButtonWidth,
         child: ElevatedButton(
           onPressed: () async {
-            await NotificationService.instance.showChatNotification(
-              id: 1,
-              title: "Test",
-              body: "Hello",
-              payload: "test_payload",
-            );
+            // await NotificationService.instance.showChatNotification(
+            //   id: 1,
+            //   title: "Test",
+            //   body: "Hello",
+            //   payload: "test_payload",
+            // );
           },
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.zero,

@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:whats_app/common/widget/permision_handeler/permission_handeler.dart';
 import 'package:whats_app/data/service/notification_service/NotificationService.dart';
 import 'package:whats_app/firebase_options.dart';
 import 'package:whats_app/my_apps.dart';
@@ -11,9 +12,10 @@ import 'data/repository/authentication_repo/AuthenticationRepo.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print('✅ FCM background: ${message.data}');
+  print(' FCM background: ${message.data}');
 }
 
+// final navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
@@ -27,10 +29,13 @@ Future<void> main() async {
   //  Local notification init
   await NotificationService.instance.initLocalNotifications();
   //  Start listeners
-  // NotificationService.instance.initFcmListeners();
+  NotificationService.instance.initFcmListeners();
 
   //  Request permission
-  await FirebaseMessaging.instance.requestPermission();
+  // await FirebaseMessaging.instance.requestPermission();
+  await NotificationService.instance.requestAndroidPermissionIfNeeded();
+
+  await PermissionHandeler.instance.permissionHandle;
 
   runApp(const MyApp());
 }

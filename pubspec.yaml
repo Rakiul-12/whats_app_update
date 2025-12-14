@@ -35,9 +35,6 @@ dependencies:
   #cached_network_image
   cached_network_image: ^3.4.1
 
-  # #firebase
-  # firebase: ^9.0.3
-
   #firebase_core
   firebase_core: ^4.2.1
 
@@ -72,10 +69,19 @@ dependencies:
   marquee: ^2.2.3
 
   # zego_uikit_prebuilt_call => for audio and video call
-  zego_uikit_prebuilt_call: ^4.22.1
+  zego_uikit_prebuilt_call: ^4.22.2
 
   #flutter_local_notifications for notification
   flutter_local_notifications: ^17.0.0
+
+  #zego_uikit_signaling_plugin
+  zego_uikit_signaling_plugin: ^2.8.20
+
+  #permission_handler
+  permission_handler: ^12.0.1
+
+  #zego_uikit
+  zego_uikit: ^2.28.36
 
 dev_dependencies:
   flutter_test:
