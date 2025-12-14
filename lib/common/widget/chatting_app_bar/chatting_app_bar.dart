@@ -12,11 +12,9 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.avatarImage,
     this.onBack,
     this.onProfileTap,
-    this.onVideoCall,
-    this.onVoiceCall,
+    this.videoCallAction,
+    this.voiceCallAction,
     this.onMore,
-    this.backgroundColor,
-    this.foregroundColor,
     this.height = 70,
   });
 
@@ -26,13 +24,12 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   final VoidCallback? onBack;
   final VoidCallback? onProfileTap;
-  final VoidCallback? onVideoCall;
-  final VoidCallback? onVoiceCall;
+
+  // Instead of callbacks, use widgets
+  final Widget? videoCallAction;
+  final Widget? voiceCallAction;
+
   final VoidCallback? onMore;
-
-  final Color? backgroundColor;
-  final Color? foregroundColor;
-
   final double height;
 
   @override
@@ -40,7 +37,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isDark = MyHelperFunction.isDarkMode(context);
+    final bool isDark = MyHelperFunction.isDarkMode(context);
 
     return AppBar(
       backgroundColor: isDark ? Mycolors.dark : Mycolors.light,
@@ -63,7 +60,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: CircleAvatar(
               radius: 25,
               backgroundImage:
-                  avatarImage ?? AssetImage(MyImage.onProfileScreen),
+                  avatarImage ?? const AssetImage(MyImage.onProfileScreen),
             ),
           ),
           const SizedBox(width: 12),
@@ -81,11 +78,9 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-
                 if (subtitle != null)
                   Builder(
                     builder: (_) {
-                      // If user is online
                       if (subtitle!.toLowerCase() == "online") {
                         return Text(
                           "Online",
@@ -97,7 +92,6 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                               ),
                         );
                       }
-                      // Otherwise show marquee for long text
                       return SizedBox(
                         height: 20,
                         child: Marquee(
@@ -122,20 +116,8 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
-        IconButton(
-          onPressed: onVideoCall,
-          icon: Icon(
-            Icons.videocam_outlined,
-            color: isDark ? Mycolors.light : Mycolors.textPrimary,
-          ),
-        ),
-        IconButton(
-          onPressed: onVoiceCall,
-          icon: Icon(
-            Icons.call_outlined,
-            color: isDark ? Mycolors.light : Mycolors.textPrimary,
-          ),
-        ),
+        if (videoCallAction != null) videoCallAction!,
+        if (voiceCallAction != null) voiceCallAction!,
         IconButton(
           onPressed: onMore,
           icon: Icon(

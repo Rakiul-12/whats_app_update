@@ -32,7 +32,6 @@ class CallPage extends StatelessWidget {
         userID: myId,
         userName: myName,
         callID: callID,
-
         config: isVideoCall
             ? ZegoUIKitPrebuiltCallConfig.oneOnOneVideoCall()
             : ZegoUIKitPrebuiltCallConfig.oneOnOneVoiceCall(),

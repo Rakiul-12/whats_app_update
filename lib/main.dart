@@ -15,7 +15,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print(' FCM background: ${message.data}');
 }
 
-// final navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
