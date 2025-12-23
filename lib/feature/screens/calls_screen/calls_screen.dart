@@ -18,7 +18,7 @@ class call_screen extends StatelessWidget {
       // floation_ac_btn
       floatingActionButton: SizedBox(
         height: Mysize.floatingButtonHeight,
-        width: Mysize.addfloatingButtonWidth,
+        width: Mysize.anotherfloatingButtonWidth,
         child: ElevatedButton(
           onPressed: () {},
           style: ElevatedButton.styleFrom(
