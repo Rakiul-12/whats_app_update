@@ -7,6 +7,7 @@ import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/style/screen_padding.dart';
 import 'package:whats_app/feature/personalization/controller/UserController.dart';
 import 'package:whats_app/feature/screens/chat_screen/user_profile/widgets/bottom_sheet.dart';
+import 'package:whats_app/feature/screens/chat_screen/user_profile/widgets/update_userName.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/const/text.dart';
@@ -61,7 +62,7 @@ class UserProfile extends StatelessWidget {
                 fieldname: "Name",
                 icon: Iconsax.user,
                 userDetails: user.username,
-                onTap: () {},
+                onTap: () => Get.to(() => UserDetailsEdit()),
               ),
               SizedBox(height: Mysize.lg),
 

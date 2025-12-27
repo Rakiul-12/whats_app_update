@@ -53,4 +53,8 @@ class MyText {
 
   // profile
   static const String profile = "Profile";
+
+  // edit profile
+  static const String editNameAbout =
+      "People will see the name if you interact with them and they don't have you saved as a contacet";
 }

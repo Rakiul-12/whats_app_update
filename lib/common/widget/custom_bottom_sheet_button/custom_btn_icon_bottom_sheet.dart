@@ -9,6 +9,7 @@ class optionItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const optionItem({
+    super.key,
     required this.icon,
     required this.name,
     required this.onTap,

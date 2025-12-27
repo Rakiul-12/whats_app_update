@@ -4,7 +4,7 @@ class UserModel {
   final String id;
   String phoneNumber;
   String about;
-  final String username;
+  String username;
   final String email;
   String profilePicture;
   String createdAt;

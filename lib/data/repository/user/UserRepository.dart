@@ -182,6 +182,7 @@ class UserRepository extends GetxController {
       return null;
     }
   }
+
   // Future<void> syncAuthDisplayName(String username) async {
   //   final u = FirebaseAuth.instance.currentUser;
   //   if (u == null) return;

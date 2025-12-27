@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:marquee/marquee.dart';
 import 'package:whats_app/common/widget/permision_handeler/permission_handeler.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';

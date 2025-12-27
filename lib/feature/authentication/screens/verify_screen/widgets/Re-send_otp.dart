@@ -18,7 +18,7 @@ void showCustomBottomSheet(BuildContext context) {
     context: context,
     backgroundColor: dark ? Mycolors.light : Mycolors.dark,
     builder: (context) {
-      return Container(
+      return SizedBox(
         height: 150,
         width: double.infinity,
 

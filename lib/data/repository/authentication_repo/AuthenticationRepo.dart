@@ -9,7 +9,6 @@ import 'package:whats_app/feature/authentication/backend/MessageRepo/MessageRepo
 import 'package:whats_app/feature/authentication/screens/log_in_screen/log_in_screen.dart';
 import 'package:whats_app/feature/authentication/screens/verify_screen/verify_screen.dart';
 import 'package:whats_app/feature/authentication/screens/welcome_screen.dart';
-import 'package:whats_app/feature/personalization/controller/UserController.dart';
 import 'package:whats_app/feature/personalization/screen/profile/create_profile.dart';
 import 'package:whats_app/utiles/const/keys.dart';
 import 'package:whats_app/utiles/popup/MyFullScreenLoader.dart';

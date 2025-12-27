@@ -5,7 +5,6 @@ import 'package:iconsax/iconsax.dart';
 import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/search_bar/search_bar.dart';
 import 'package:whats_app/data/repository/user/UserRepository.dart';
-import 'package:whats_app/feature/authentication/Model/UserModel.dart';
 import 'package:whats_app/feature/authentication/backend/chatScreenController/ChatScreenController.dart';
 import 'package:whats_app/feature/screens/chat_screen/user_profile/user_profile.dart';
 import 'package:whats_app/feature/screens/chat_screen/widgets/chat_list.dart';
@@ -38,7 +37,7 @@ class chat_screen extends StatelessWidget {
           // Camera Icon
           IconButton(
             onPressed: controller.GetCameraAccess,
-            icon: const Icon(Iconsax.camera),
+            icon: const Icon(Icons.camera_alt_outlined),
           ),
           const SizedBox(width: Mysize.sm),
           //User Profile
@@ -91,12 +90,7 @@ class chat_screen extends StatelessWidget {
         children: [
           // search bar
           Padding(
-            padding: const EdgeInsets.only(
-              left: 10,
-              right: 10,
-              bottom: 15,
-              top: 20,
-            ),
+            padding: EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 20),
             child: chat_screen_search_bar(),
           ),
 

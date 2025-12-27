@@ -18,7 +18,7 @@ class cloudinaryServices extends GetxController {
 
       final formData = dio.FormData.fromMap({
         'upload_preset': MyKeys.uploadPreset,
-        'folder': folderName,
+        'folder': folderName.trim(),
         "file": await dio.MultipartFile.fromFile(
           image.path,
           filename: image.path.split("/").last,

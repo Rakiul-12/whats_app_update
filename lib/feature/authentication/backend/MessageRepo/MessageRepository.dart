@@ -33,9 +33,9 @@ class Messagerepository extends GetxController {
   }
 
   // Get all messages
-  Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessage() {
-    return _firestore.collection("message").snapshots();
-  }
+  // Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessage() {
+  //   return _firestore.collection("message").snapshots();
+  // }
 
   // Build conversation ID between current user and another user
   static String getConversationID(String otherUserId) {
@@ -283,7 +283,7 @@ class Messagerepository extends GetxController {
       final file = File(picked.path);
       isSending.value = true;
 
-      // Upload to Cloudinary (uses the function you pass in)
+      // Upload to Cloudinary
       final dio.Response res = await uploadFn(file);
 
       // debugPrint("Cloudinary Response: ${res.data}");
@@ -318,10 +318,7 @@ class Messagerepository extends GetxController {
         imageUrl,
         MessageType.image,
       );
-
-      // debugPrint("Image message sent: $imageUrl (publicId = $publicId)");
     } catch (e) {
-      // debugPrint("sendImageMessage error: $e\n$st");
       MySnackBarHelpers.errorSnackBar(
         title: "Image Send Failed",
         message: e.toString(),

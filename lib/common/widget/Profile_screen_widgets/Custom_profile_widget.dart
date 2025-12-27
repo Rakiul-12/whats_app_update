@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:whats_app/feature/personalization/controller/UserController.dart';
 import 'package:whats_app/feature/screens/chat_screen/user_profile/widgets/show_profile_in_big_screen.dart';
 import 'package:whats_app/utiles/theme/const/image.dart';
@@ -28,12 +27,10 @@ class Custom_profile_widget extends StatelessWidget {
             borderRadius: BorderRadius.circular(1000),
             child: user.profilePicture.isNotEmpty
                 ? CachedNetworkImage(
-                    height: 225,
-                    width: 225,
+                    height: 170,
+                    width: 170,
                     fit: BoxFit.cover,
                     imageUrl: user.profilePicture,
-                    errorWidget: (c, url, err) =>
-                        CircleAvatar(child: Icon(Iconsax.user)),
                   )
                 : Image.asset(MyImage.onProfileScreen, fit: BoxFit.cover),
           ),
