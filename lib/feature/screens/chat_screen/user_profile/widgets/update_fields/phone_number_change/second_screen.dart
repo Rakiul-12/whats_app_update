@@ -6,7 +6,6 @@ import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/button/MyElevatedButton.dart';
 import 'package:whats_app/common/widget/style/screen_padding.dart';
 import 'package:whats_app/feature/personalization/controller/update_user_details/update_user_details_controller.dart';
-import 'package:whats_app/feature/screens/chat_screen/user_profile/widgets/update_fields/phone_number_change/otp_screen.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/validation/Validations.dart';
 
@@ -26,7 +25,7 @@ class ChangeNumberSecondScreen extends StatelessWidget {
         showBackArrow: true,
       ),
       floatingActionButton: MyElevatedButton(
-        onPressed: () => Get.to(ChangeNumberOtpScreen()),
+        onPressed: () => updateController.sendOtpToNewNumber(),
         text: "Next",
       ),
       body: Padding(
@@ -70,6 +69,9 @@ class ChangeNumberSecondScreen extends StatelessWidget {
                     initialCountryCode: 'BD',
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     invalidNumberMessage: 'Enter a valid phone number',
+                    onChanged: (phone) {
+                      updateController.newNumberE164 = phone.completeNumber;
+                    },
                   ),
                 ],
               ),

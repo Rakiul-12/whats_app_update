@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:pinput/pinput.dart';
 import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/button/MyElevatedButton.dart';
 import 'package:whats_app/common/widget/style/screen_padding.dart';
+import 'package:whats_app/feature/personalization/controller/update_user_details/update_user_details_controller.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/const/text.dart';
@@ -14,7 +16,7 @@ class ChangeNumberOtpScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = MyHelperFunction.isDarkMode(context);
-    final isDark = MyHelperFunction.isDarkMode(context);
+    final updateController = Get.put(UpdateUserDetailsController());
     // verify code input box theme
     final defaultPinTheme = PinTheme(
       width: 55,
@@ -41,7 +43,14 @@ class ChangeNumberOtpScreen extends StatelessWidget {
         ),
         showBackArrow: true,
       ),
-      floatingActionButton: MyElevatedButton(onPressed: () {}, text: "Verify"),
+      floatingActionButton: MyElevatedButton(
+        onPressed: () {
+          updateController.confirmNewNumberOtp(
+            updateController.otpController.text.trim(),
+          );
+        },
+        text: "Verify",
+      ),
       body: Padding(
         padding: MyPadding.screenPadding,
         child: Column(
@@ -54,7 +63,7 @@ class ChangeNumberOtpScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 MyText.changeNumberOtpScreenText,
                 style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                  color: isDark ? Mycolors.light : Mycolors.dark,
+                  color: dark ? Mycolors.light : Mycolors.dark,
                 ),
               ),
             ),
@@ -64,7 +73,7 @@ class ChangeNumberOtpScreen extends StatelessWidget {
               child: Pinput(
                 // key: controller.otpKey,
                 length: 6,
-                // controller: controller.otpController,
+                controller: updateController.otpController,
                 defaultPinTheme: defaultPinTheme,
                 focusedPinTheme: defaultPinTheme.copyWith(
                   decoration: BoxDecoration(
