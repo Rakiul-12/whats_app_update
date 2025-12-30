@@ -1,16 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:whats_app/data/repository/user/UserRepository.dart';
 import 'package:whats_app/feature/NavBar/navbar.dart';
 import 'package:whats_app/feature/authentication/backend/MessageRepo/MessageRepository.dart';
 import 'package:whats_app/feature/authentication/screens/log_in_screen/log_in_screen.dart';
 import 'package:whats_app/feature/authentication/screens/verify_screen/verify_screen.dart';
 import 'package:whats_app/feature/authentication/screens/welcome_screen.dart';
+import 'package:whats_app/feature/personalization/controller/UserController.dart';
 import 'package:whats_app/feature/personalization/screen/profile/create_profile.dart';
 import 'package:whats_app/utiles/const/keys.dart';
+import 'package:whats_app/utiles/exception/firebase_auth_exceptions.dart';
+import 'package:whats_app/utiles/exception/firebase_exceptions.dart';
+import 'package:whats_app/utiles/exception/formate_exceptions.dart';
+import 'package:whats_app/utiles/exception/platform_exceptions.dart';
 import 'package:whats_app/utiles/popup/MyFullScreenLoader.dart';
 import 'package:whats_app/utiles/popup/SnackbarHepler.dart';
 
@@ -131,6 +138,7 @@ class AuthenticationRepository extends GetxController {
             title: "OTP Sent",
             message: "OTP sent on your number",
           );
+          debugPrint("SENDING OTP TO => '${fullPhone.value}'");
 
           Get.to(() => verify_screen());
         },
@@ -205,6 +213,8 @@ class AuthenticationRepository extends GetxController {
   //  VERIFY OTP
   Future<void> verifyWithOtp() async {
     try {
+      final code = otpController.text.trim();
+
       if (verifyId.trim().isEmpty) {
         MySnackBarHelpers.errorSnackBar(
           title: "Session expired",
@@ -213,41 +223,36 @@ class AuthenticationRepository extends GetxController {
         return;
       }
 
-      MyFullScreenLoader.openLoadingDialog(
-        "We are processing your information...",
-      );
+      if (code.length != 6) {
+        MySnackBarHelpers.errorSnackBar(
+          title: "Invalid OTP",
+          message: "Enter 6-digit code",
+        );
+        return;
+      }
+
+      MyFullScreenLoader.openLoadingDialog("Verifying...");
 
       final credential = PhoneAuthProvider.credential(
         verificationId: verifyId,
-        smsCode: otpController.text.trim(),
+        smsCode: code,
       );
 
-      await _auth.signInWithCredential(credential);
-
-      await _afterLoginInit();
-      print("error is $credential");
+      await FirebaseAuth.instance.signInWithCredential(credential);
 
       MyFullScreenLoader.stopLoading();
 
       MySnackBarHelpers.successSnackBar(
         title: "Verified",
-        message: "Your number was verified successfully",
+        message: "Number verified",
       );
 
       Get.offAll(() => profile_screen());
     } on FirebaseAuthException catch (e) {
       MyFullScreenLoader.stopLoading();
-      Get.back();
       MySnackBarHelpers.errorSnackBar(
         title: "OTP Failed",
         message: e.message ?? e.code,
-      );
-    } catch (e) {
-      MyFullScreenLoader.stopLoading();
-      Get.back();
-      MySnackBarHelpers.errorSnackBar(
-        title: "OTP Failed",
-        message: e.toString(),
       );
     }
   }
@@ -269,6 +274,48 @@ class AuthenticationRepository extends GetxController {
     if (name.isNotEmpty) return name;
 
     return FirebaseAuth.instance.currentUser?.phoneNumber ?? "Guest";
+  }
+
+  // Delete user account
+  Future<void> deleteAccount() async {
+    try {
+      await UserRepository.instance.removeUserRecord(currentUser!.uid);
+
+      // Remove profile Picture from cloudinary
+      String publicId = UserController.instance.user.value.publicId;
+      if (publicId.isNotEmpty) {
+        UserRepository.instance.deleteProfilePicture(publicId);
+      }
+      await _auth.currentUser?.delete();
+    } on FirebaseAuthException catch (e) {
+      throw MyFirebaseAuthException(e.code).message;
+    } on FirebaseException catch (e) {
+      throw MyFirebaseException(e.code).message;
+    } on FormatException catch (_) {
+      throw MyFormatException();
+    } on PlatformException catch (e) {
+      throw MyPlatformException(e.code).message;
+    } catch (e) {
+      throw "Something went wrong.Please try again";
+    }
+  }
+
+  // Logout User
+  Future<void> logoutUser() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      Get.offAll(() => welcome_screen());
+    } on FirebaseAuthException catch (e) {
+      throw MyFirebaseAuthException(e.code).message;
+    } on FirebaseException catch (e) {
+      throw MyFirebaseException(e.code).message;
+    } on FormatException catch (_) {
+      throw MyFormatException();
+    } on PlatformException catch (e) {
+      throw MyPlatformException(e.code).message;
+    } catch (e) {
+      throw "Something went wrong.Please try again";
+    }
   }
 
   @override

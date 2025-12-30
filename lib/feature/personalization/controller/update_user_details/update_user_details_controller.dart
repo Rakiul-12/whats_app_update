@@ -30,7 +30,6 @@ class UpdateUserDetailsController extends GetxController {
   final emailController = TextEditingController();
   final reAuthenticate = TextEditingController();
 
-
   RxString fullPhone = ''.obs;
   String verifyId = '';
   bool _isSendingOtp = false;
@@ -259,7 +258,7 @@ class UpdateUserDetailsController extends GetxController {
 
       MySnackBarHelpers.successSnackBar(
         title: "Success",
-        message: "Your phone number has been updated everywhere.",
+        message: "Your phone number has been updated.",
       );
     } on FirebaseAuthException catch (e) {
       MyFullScreenLoader.stopLoading();

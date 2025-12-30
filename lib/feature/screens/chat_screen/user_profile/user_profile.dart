@@ -5,6 +5,7 @@ import 'package:whats_app/common/widget/Profile_screen_widgets/Custom_profile_sc
 import 'package:whats_app/common/widget/Profile_screen_widgets/Custom_profile_widget.dart';
 import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/style/screen_padding.dart';
+import 'package:whats_app/data/repository/authentication_repo/AuthenticationRepo.dart';
 import 'package:whats_app/feature/personalization/controller/UserController.dart';
 import 'package:whats_app/feature/screens/chat_screen/user_profile/widgets/bottom_sheet.dart';
 import 'package:whats_app/feature/screens/chat_screen/user_profile/widgets/update_fields/delete_user/re_authenticate.dart';
@@ -20,6 +21,7 @@ class UserProfile extends StatelessWidget {
   UserProfile({super.key});
 
   final controller = UserController.instance;
+  final authRepo = AuthenticationRepository.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,7 @@ class UserProfile extends StatelessWidget {
         showBackArrow: true,
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () => authRepo.logoutUser(),
             icon: Icon(Iconsax.logout, color: Colors.red),
           ),
         ],

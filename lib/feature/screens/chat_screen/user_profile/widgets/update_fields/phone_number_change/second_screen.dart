@@ -44,6 +44,7 @@ class ChangeNumberSecondScreen extends StatelessWidget {
                   ),
                   SizedBox(height: Mysize.md),
                   TextFormField(
+                    readOnly: true,
                     controller: updateController.phoneNumberFirst,
                     validator: (value) =>
                         MyValidator.validateEmptyText("Phone number", value),

@@ -177,6 +177,23 @@ class UserRepository extends GetxController {
     }
   }
 
+  // delete user details from Db
+  Future<void> removeUserRecord(String userId) async {
+    try {
+      await _Db.collection(MyKeys.userCollection).doc(userId).delete();
+    } on FirebaseAuthException catch (e) {
+      throw MyFirebaseAuthException(e.code).message;
+    } on FirebaseException catch (e) {
+      throw MyFirebaseException(e.code).message;
+    } on FormatException catch (_) {
+      throw MyFormatException();
+    } on PlatformException catch (e) {
+      throw MyPlatformException(e.code).message;
+    } catch (e) {
+      throw "Something went wrong.Please try again";
+    }
+  }
+
   // Future<void> syncAuthDisplayName(String username) async {
   //   final u = FirebaseAuth.instance.currentUser;
   //   if (u == null) return;

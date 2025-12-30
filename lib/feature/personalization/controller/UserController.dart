@@ -3,9 +3,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:whats_app/data/repository/authentication_repo/AuthenticationRepo.dart';
 import 'package:whats_app/data/repository/user/UserRepository.dart';
 import 'package:whats_app/feature/NavBar/navbar.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
+import 'package:whats_app/feature/authentication/screens/welcome_screen.dart';
 import 'package:whats_app/utiles/popup/MyFullScreenLoader.dart';
 import 'package:whats_app/utiles/popup/SnackbarHepler.dart';
 import 'package:dio/dio.dart' as dio;
@@ -15,7 +17,6 @@ import 'package:whats_app/utiles/theme/const/sizes.dart';
 class UserController extends GetxController {
   static UserController get instance => Get.find();
 
-  
   Rx<UserModel> user = UserModel.empty().obs;
   final _userRepository = Get.put(UserRepository());
   bool _isSendingOtp = false;
@@ -34,9 +35,6 @@ class UserController extends GetxController {
     super.onInit();
     loadCurrentUser();
   }
-
-
-
 
   // Update User Profile Picture From Camera
   Future<void> updateUserProfilePictureFromCamera() async {
@@ -296,137 +294,136 @@ class UserController extends GetxController {
 
   //-------------DELETE ACCOUNT SECTION-------------
   // Send Otp To New Number
-Future<void> sendOtpForDelete() async {
-  if (_isSendingOtp) return;
-  _isSendingOtp = true;
+  Future<void> sendOtpForDelete() async {
+    if (_isSendingOtp) return;
+    _isSendingOtp = true;
 
-  try {
-    MyFullScreenLoader.openLoadingDialog("We are processing your information...");
-
-    final form = reAuthenticateKey.currentState;
-    if (form == null || !form.validate()) {
-      MyFullScreenLoader.stopLoading();
-      _isSendingOtp = false;
-      return;
-    }
-
-    final phoneText = reAuthenticate.text.trim().replaceAll(' ', '');
-
-    if (phoneText.isEmpty || !phoneText.startsWith('+')) {
-      MyFullScreenLoader.stopLoading();
-      _isSendingOtp = false;
-      MySnackBarHelpers.errorSnackBar(
-        title: "Invalid Number",
-        message: "Phone number must be in a format.",
+    try {
+      MyFullScreenLoader.openLoadingDialog(
+        "We are processing your information...",
       );
-      return;
-    }
 
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: phoneText,
-      timeout: const Duration(seconds: 60),
+      final form = reAuthenticateKey.currentState;
+      if (form == null || !form.validate()) {
+        MyFullScreenLoader.stopLoading();
+        _isSendingOtp = false;
+        return;
+      }
 
-      verificationCompleted: (PhoneAuthCredential credential) {},
+      final phoneText = reAuthenticate.text.trim();
 
-      verificationFailed: (FirebaseAuthException e) {
+      if (phoneText.isEmpty) {
         MyFullScreenLoader.stopLoading();
         _isSendingOtp = false;
         MySnackBarHelpers.errorSnackBar(
-          title: "Verification Failed",
-          message: e.message ?? e.code,
+          title: "Invalid Number",
+          message: "Phone number must be in a format.",
         );
-      },
+        return;
+      }
 
-      codeSent: (String verificationId, int? resendToken) {
-        verifyId = verificationId;
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phoneText,
+        timeout: const Duration(seconds: 60),
 
-        MyFullScreenLoader.stopLoading();
-        _isSendingOtp = false;
+        verificationCompleted: (PhoneAuthCredential credential) {},
 
-        MySnackBarHelpers.successSnackBar(
-          title: "OTP Sent",
-          message: "OTP sent to $phoneText",
-        );
-        debugPrint("Sending OTP to: $phoneText");
+        verificationFailed: (FirebaseAuthException e) {
+          MyFullScreenLoader.stopLoading();
+          _isSendingOtp = false;
+          MySnackBarHelpers.errorSnackBar(
+            title: "Verification Failed",
+            message: e.message ?? e.code,
+          );
+        },
 
-        //  Open otp dialog directly 
-        deleteAccountWarningPopup(
-          title: "Delete Account",
-          middleText: "Don't share your OTP with anyone.",
-          content: TextFormField(
-            controller: otpController,
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            decoration: const InputDecoration(
-              labelText: "OTP Code",
-              hintText: "Enter 6-digit OTP",
-              border: OutlineInputBorder(),
-              counterText: "",
+        codeSent: (String verificationId, int? resendToken) {
+          verifyId = verificationId;
+
+          MyFullScreenLoader.stopLoading();
+          _isSendingOtp = false;
+
+          MySnackBarHelpers.successSnackBar(
+            title: "OTP Sent",
+            message: "OTP sent to $phoneText",
+          );
+          debugPrint("Sending OTP to: $phoneText");
+
+          //  Open otp dialog directly
+          deleteAccountWarningPopup(
+            title: "Delete Account",
+            middleText: "Don't share your OTP with anyone.",
+            content: TextFormField(
+              controller: otpController,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              decoration: const InputDecoration(
+                labelText: "OTP Code",
+                hintText: "Enter 6-digit OTP",
+                border: OutlineInputBorder(),
+                counterText: "",
+              ),
             ),
-          ),
-          onConfirm: () => confirmDeleteOtp(), 
+            onConfirm: () => confirmDeleteOtp(),
+          );
+        },
+
+        codeAutoRetrievalTimeout: (String verificationId) {
+          verifyId = verificationId;
+          _isSendingOtp = false;
+        },
+      );
+    } catch (e) {
+      MyFullScreenLoader.stopLoading();
+      _isSendingOtp = false;
+      MySnackBarHelpers.errorSnackBar(title: "Failed", message: e.toString());
+    }
+  }
+
+  // Confirm Delete Otp
+  Future<void> confirmDeleteOtp() async {
+    try {
+      final otp = otpController.text.trim();
+      if (otp.length != 6) {
+        MySnackBarHelpers.errorSnackBar(
+          title: "Invalid OTP",
+          message: "Enter a valid 6-digit OTP.",
         );
-      },
+        return;
+      }
 
-      codeAutoRetrievalTimeout: (String verificationId) {
-        verifyId = verificationId;
-        _isSendingOtp = false;
-      },
-    );
-  } catch (e) {
-    MyFullScreenLoader.stopLoading();
-    _isSendingOtp = false;
-    MySnackBarHelpers.errorSnackBar(title: "Failed", message: e.toString());
-  }
-}
+      if (verifyId.isEmpty) {
+        MySnackBarHelpers.errorSnackBar(
+          title: "Session Expired",
+          message: "Please request OTP again.",
+        );
+        return;
+      }
 
-Future<void> confirmDeleteOtp() async {
-  try {
-    final otp = otpController.text.trim();
-    if (otp.length != 6) {
-      MySnackBarHelpers.errorSnackBar(
-        title: "Invalid OTP",
-        message: "Enter a valid 6-digit OTP.",
+      MyFullScreenLoader.openLoadingDialog("Verifying OTP...");
+
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verifyId,
+        smsCode: otp,
       );
-      return;
-    }
 
-    if (verifyId.isEmpty) {
-      MySnackBarHelpers.errorSnackBar(
-        title: "Session Expired",
-        message: "Please request OTP again.",
+      await FirebaseAuth.instance.currentUser!.reauthenticateWithCredential(
+        credential,
       );
-      return;
+      await AuthenticationRepository.instance.deleteAccount();
+
+      MyFullScreenLoader.stopLoading();
+      Get.offAll(welcome_screen());
+
+      MySnackBarHelpers.successSnackBar(
+        title: "Deleted",
+        message: "Your account has been deleted.",
+      );
+    } catch (e) {
+      MyFullScreenLoader.stopLoading();
+      MySnackBarHelpers.errorSnackBar(title: "Failed", message: e.toString());
     }
-
-    MyFullScreenLoader.openLoadingDialog("Verifying OTP...");
-
-    final credential = PhoneAuthProvider.credential(
-      verificationId: verifyId,
-      smsCode: otp,
-    );
-
-    await FirebaseAuth.instance.currentUser!
-        .reauthenticateWithCredential(credential);
-
-    MyFullScreenLoader.stopLoading();
-    Get.back(); 
-
-    
-    await FirebaseAuth.instance.currentUser!.delete();
-
-    MySnackBarHelpers.successSnackBar(
-      title: "Deleted",
-      message: "Your account has been deleted.",
-    );
-  } catch (e) {
-    MyFullScreenLoader.stopLoading();
-    MySnackBarHelpers.errorSnackBar(
-      title: "Failed",
-      message: e.toString(),
-    );
   }
-}
 
   //-------------DELETE ACCOUNT SECTION END-------------
 }

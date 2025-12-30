@@ -25,6 +25,7 @@ class ChangeNumberFirstScreen extends StatelessWidget {
         onPressed: () => Get.to(ChangeNumberSecondScreen()),
         text: "Change",
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: Padding(
         padding: MyPadding.screenPadding,
         child: Column(

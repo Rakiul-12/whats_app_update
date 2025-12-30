@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/button/MyElevatedButton.dart';
 import 'package:whats_app/common/widget/style/screen_padding.dart';
 import 'package:whats_app/feature/personalization/controller/UserController.dart';
+import 'package:whats_app/feature/personalization/controller/update_user_details/update_user_details_controller.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
@@ -16,8 +18,15 @@ class ReAuthenticate extends StatelessWidget {
   Widget build(BuildContext context) {
     bool isDark = MyHelperFunction.isDarkMode(context);
     final controller = UserController.instance;
+    final upDateController = Get.put(UpdateUserDetailsController());
     return Scaffold(
-      appBar: MyAppbar(showBackArrow: true, title: Text("Re-authenticate")),
+      appBar: MyAppbar(
+        showBackArrow: true,
+        title: Text(
+          "Re-authenticate",
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+      ),
       floatingActionButton: MyElevatedButton(
         text: "Verify",
         onPressed: () => controller.sendOtpForDelete(),
@@ -39,8 +48,10 @@ class ReAuthenticate extends StatelessWidget {
             Form(
               key: controller.reAuthenticateKey,
               child: TextFormField(
-                controller: controller.reAuthenticate,
-                validator: (value) => MyValidator.validatePhoneNumber(value),
+                readOnly: true,
+                controller: upDateController.reAuthenticate,
+                validator: (value) =>
+                    MyValidator.validateEmptyText("Phone number", value),
                 decoration: InputDecoration(
                   labelText: "Phone Number",
                   prefixIcon: Icon(Iconsax.call),
