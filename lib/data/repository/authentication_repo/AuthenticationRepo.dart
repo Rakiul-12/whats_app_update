@@ -107,7 +107,7 @@ class AuthenticationRepository extends GetxController {
 
       await _auth.verifyPhoneNumber(
         phoneNumber: fullPhone.value.trim(),
-        timeout: Duration(seconds: 60),
+        timeout: Duration(seconds: 120),
 
         verificationCompleted: (PhoneAuthCredential credential) {},
 

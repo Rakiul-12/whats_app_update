@@ -44,13 +44,11 @@ class ChangeNumberOtpScreen extends StatelessWidget {
         showBackArrow: true,
       ),
       floatingActionButton: MyElevatedButton(
-        onPressed: () {
-          updateController.confirmNewNumberOtp(
-            updateController.otpController.text.trim(),
-          );
-        },
+        onPressed: () => updateController.confirmNewNumberOtp(),
         text: "Verify",
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+
       body: Padding(
         padding: MyPadding.screenPadding,
         child: Column(
@@ -71,7 +69,7 @@ class ChangeNumberOtpScreen extends StatelessWidget {
             // verify code input box
             Center(
               child: Pinput(
-                // key: controller.otpKey,
+                key: updateController.upDateUserOtpFormKey,
                 length: 6,
                 controller: updateController.otpController,
                 defaultPinTheme: defaultPinTheme,

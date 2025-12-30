@@ -32,6 +32,7 @@ class UpdateUserName extends StatelessWidget {
         onPressed: () => updateController.updateUserName(),
         text: "Save",
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
 
       body: Padding(
         padding: MyPadding.screenPadding,

@@ -10,18 +10,33 @@ import 'package:whats_app/utiles/popup/MyFullScreenLoader.dart';
 import 'package:whats_app/utiles/popup/SnackbarHepler.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:whats_app/utiles/theme/const/sizes.dart';
 
 class UserController extends GetxController {
   static UserController get instance => Get.find();
+
+  
   Rx<UserModel> user = UserModel.empty().obs;
   final _userRepository = Get.put(UserRepository());
-  TextEditingController userName = TextEditingController();
+  bool _isSendingOtp = false;
+  String verifyId = '';
+
+  // text fields
+  final userName = TextEditingController();
+  final reAuthenticate = TextEditingController();
+  final otpController = TextEditingController();
+
+  // form key
+  final reAuthenticateKey = GlobalKey<FormState>();
 
   @override
   void onInit() {
     super.onInit();
     loadCurrentUser();
   }
+
+
+
 
   // Update User Profile Picture From Camera
   Future<void> updateUserProfilePictureFromCamera() async {
@@ -126,7 +141,6 @@ class UserController extends GetxController {
 
       final finalUserName = inputName.isNotEmpty ? inputName : fallbackName;
 
-      //  Update FirebaseAuth displayName ZEGO reads this if you use displayName
       await firebaseUser.updateDisplayName(finalUserName);
       await firebaseUser.reload();
 
@@ -149,8 +163,7 @@ class UserController extends GetxController {
       Get.offAll(() => navigationMenuScreen());
     } catch (e) {
       MyFullScreenLoader.stopLoading();
-      Get.back();
-      MySnackBarHelpers.warningSnackBar(
+      MySnackBarHelpers.errorSnackBar(
         title: "Data not saved",
         message: e.toString(),
       );
@@ -248,4 +261,172 @@ class UserController extends GetxController {
 
     return 'Last seen on ${dt.day}/${dt.month}/${dt.year} at $timeStr';
   }
+
+  // Delete account warning popup
+  Future<void> deleteAccountWarningPopup({
+    required String title,
+    String? middleText,
+    required VoidCallback onConfirm,
+    Widget? content,
+  }) async {
+    Get.defaultDialog(
+      title: title,
+      contentPadding: EdgeInsets.all(Mysize.md),
+      middleText: middleText!,
+      content: content,
+      textCancel: null,
+      textConfirm: null,
+      cancel: OutlinedButton(
+        onPressed: () => Get.back(),
+        child: const Text('Cancel'),
+      ),
+      confirm: ElevatedButton(
+        onPressed: onConfirm,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          side: const BorderSide(color: Colors.red),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Mysize.lg),
+          child: const Text("Delete"),
+        ),
+      ),
+    );
+  }
+
+  //-------------DELETE ACCOUNT SECTION-------------
+  // Send Otp To New Number
+Future<void> sendOtpForDelete() async {
+  if (_isSendingOtp) return;
+  _isSendingOtp = true;
+
+  try {
+    MyFullScreenLoader.openLoadingDialog("We are processing your information...");
+
+    final form = reAuthenticateKey.currentState;
+    if (form == null || !form.validate()) {
+      MyFullScreenLoader.stopLoading();
+      _isSendingOtp = false;
+      return;
+    }
+
+    final phoneText = reAuthenticate.text.trim().replaceAll(' ', '');
+
+    if (phoneText.isEmpty || !phoneText.startsWith('+')) {
+      MyFullScreenLoader.stopLoading();
+      _isSendingOtp = false;
+      MySnackBarHelpers.errorSnackBar(
+        title: "Invalid Number",
+        message: "Phone number must be in a format.",
+      );
+      return;
+    }
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phoneText,
+      timeout: const Duration(seconds: 60),
+
+      verificationCompleted: (PhoneAuthCredential credential) {},
+
+      verificationFailed: (FirebaseAuthException e) {
+        MyFullScreenLoader.stopLoading();
+        _isSendingOtp = false;
+        MySnackBarHelpers.errorSnackBar(
+          title: "Verification Failed",
+          message: e.message ?? e.code,
+        );
+      },
+
+      codeSent: (String verificationId, int? resendToken) {
+        verifyId = verificationId;
+
+        MyFullScreenLoader.stopLoading();
+        _isSendingOtp = false;
+
+        MySnackBarHelpers.successSnackBar(
+          title: "OTP Sent",
+          message: "OTP sent to $phoneText",
+        );
+        debugPrint("Sending OTP to: $phoneText");
+
+        //  Open otp dialog directly 
+        deleteAccountWarningPopup(
+          title: "Delete Account",
+          middleText: "Don't share your OTP with anyone.",
+          content: TextFormField(
+            controller: otpController,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            decoration: const InputDecoration(
+              labelText: "OTP Code",
+              hintText: "Enter 6-digit OTP",
+              border: OutlineInputBorder(),
+              counterText: "",
+            ),
+          ),
+          onConfirm: () => confirmDeleteOtp(), 
+        );
+      },
+
+      codeAutoRetrievalTimeout: (String verificationId) {
+        verifyId = verificationId;
+        _isSendingOtp = false;
+      },
+    );
+  } catch (e) {
+    MyFullScreenLoader.stopLoading();
+    _isSendingOtp = false;
+    MySnackBarHelpers.errorSnackBar(title: "Failed", message: e.toString());
+  }
+}
+
+Future<void> confirmDeleteOtp() async {
+  try {
+    final otp = otpController.text.trim();
+    if (otp.length != 6) {
+      MySnackBarHelpers.errorSnackBar(
+        title: "Invalid OTP",
+        message: "Enter a valid 6-digit OTP.",
+      );
+      return;
+    }
+
+    if (verifyId.isEmpty) {
+      MySnackBarHelpers.errorSnackBar(
+        title: "Session Expired",
+        message: "Please request OTP again.",
+      );
+      return;
+    }
+
+    MyFullScreenLoader.openLoadingDialog("Verifying OTP...");
+
+    final credential = PhoneAuthProvider.credential(
+      verificationId: verifyId,
+      smsCode: otp,
+    );
+
+    await FirebaseAuth.instance.currentUser!
+        .reauthenticateWithCredential(credential);
+
+    MyFullScreenLoader.stopLoading();
+    Get.back(); 
+
+    
+    await FirebaseAuth.instance.currentUser!.delete();
+
+    MySnackBarHelpers.successSnackBar(
+      title: "Deleted",
+      message: "Your account has been deleted.",
+    );
+  } catch (e) {
+    MyFullScreenLoader.stopLoading();
+    MySnackBarHelpers.errorSnackBar(
+      title: "Failed",
+      message: e.toString(),
+    );
+  }
+}
+
+  //-------------DELETE ACCOUNT SECTION END-------------
 }

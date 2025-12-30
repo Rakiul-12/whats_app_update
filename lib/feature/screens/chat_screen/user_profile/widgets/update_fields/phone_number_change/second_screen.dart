@@ -28,6 +28,7 @@ class ChangeNumberSecondScreen extends StatelessWidget {
         onPressed: () => updateController.sendOtpToNewNumber(),
         text: "Next",
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: Padding(
         padding: MyPadding.screenPadding,
         child: Column(
@@ -58,7 +59,6 @@ class ChangeNumberSecondScreen extends StatelessWidget {
                   ),
                   SizedBox(height: Mysize.md),
                   IntlPhoneField(
-                    controller: updateController.phoneNumberSecond,
                     validator: (value) => MyValidator.validatePhoneNumber(
                       value?.completeNumber ?? '',
                     ),
@@ -70,7 +70,8 @@ class ChangeNumberSecondScreen extends StatelessWidget {
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     invalidNumberMessage: 'Enter a valid phone number',
                     onChanged: (phone) {
-                      updateController.newNumberE164 = phone.completeNumber;
+                      updateController.fullPhone.value = phone.completeNumber
+                          .trim();
                     },
                   ),
                 ],

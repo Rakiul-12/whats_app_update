@@ -75,4 +75,7 @@ class MyText {
 
   static const String changeNumberOtpScreenText =
       "To keep your account secure, we need to verify your new phone number.A one-time verification code will be sent via SMS.";
+
+  static const String editUserEmail =
+      "Your email helps us keep your account safe and lets you recover it anytime. Don’t worry — we won’t share it with anyone";
 }

@@ -1,11 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:whats_app/data/repository/user/UserRepository.dart';
 import 'package:whats_app/feature/personalization/controller/UserController.dart';
+import 'package:whats_app/feature/screens/chat_screen/user_profile/user_profile.dart';
 import 'package:whats_app/feature/screens/chat_screen/user_profile/widgets/update_fields/phone_number_change/otp_screen.dart';
-import 'package:whats_app/utiles/const/keys.dart';
 import 'package:whats_app/utiles/popup/MyFullScreenLoader.dart';
 import 'package:whats_app/utiles/popup/SnackbarHepler.dart';
 
@@ -16,6 +15,8 @@ class UpdateUserDetailsController extends GetxController {
   final upDateUserNameFormKey = GlobalKey<FormState>();
   final upDateUserAboutFormKey = GlobalKey<FormState>();
   final upDateUserNumberFormKey = GlobalKey<FormState>();
+  final upDateUserOtpFormKey = GlobalKey<FormState>();
+  final upDateUserEmailFormKey = GlobalKey<FormState>();
 
   // controller
   final userController = UserController.instance;
@@ -25,11 +26,14 @@ class UpdateUserDetailsController extends GetxController {
   final username = TextEditingController();
   final about = TextEditingController();
   final phoneNumberFirst = TextEditingController();
-  final phoneNumberSecond = TextEditingController();
   final otpController = TextEditingController();
+  final emailController = TextEditingController();
+  final reAuthenticate = TextEditingController();
 
-  String newNumberE164 = '';
-  String? _verificationId;
+
+  RxString fullPhone = ''.obs;
+  String verifyId = '';
+  bool _isSendingOtp = false;
 
   @override
   void onInit() {
@@ -41,6 +45,8 @@ class UpdateUserDetailsController extends GetxController {
     username.text = userController.user.value.username;
     about.text = userController.user.value.about;
     phoneNumberFirst.text = userController.user.value.phoneNumber;
+    emailController.text = userController.user.value.email;
+    reAuthenticate.text = userController.user.value.phoneNumber;
   }
 
   // for update user Name
@@ -100,15 +106,14 @@ class UpdateUserDetailsController extends GetxController {
       Get.back();
       MySnackBarHelpers.successSnackBar(
         title: "Congratulations",
-        message: "Your name has been updated",
+        message: "Your about has been updated",
       );
     } catch (e) {
       MyFullScreenLoader.stopLoading();
       MySnackBarHelpers.errorSnackBar(
-        title: "Update named failed!",
+        title: "Update about failed!",
         message: e.toString(),
       );
-      print("Error $e");
     }
   }
 
@@ -116,93 +121,191 @@ class UpdateUserDetailsController extends GetxController {
 
   // Send Otp To New Number
   Future<void> sendOtpToNewNumber() async {
-    MyFullScreenLoader.openLoadingDialog(
-      'We are updating your phone number...',
-    );
-
-    final form = upDateUserNumberFormKey.currentState;
-    if (form == null || !form.validate()) {
-      MyFullScreenLoader.stopLoading();
-      return;
-    }
-    if (phoneNumberSecond.value.text.isEmpty) {
-      MyFullScreenLoader.stopLoading();
-      return;
-    }
-
-    final newNumber = newNumberE164.replaceAll(' ', '');
+    if (_isSendingOtp) return;
+    _isSendingOtp = true;
 
     try {
+      MyFullScreenLoader.openLoadingDialog(
+        "We are processing your information...",
+      );
+
+      final form = upDateUserNumberFormKey.currentState;
+      if (form == null || !form.validate()) {
+        MyFullScreenLoader.stopLoading();
+        _isSendingOtp = false;
+        return;
+      }
+
+      final phone = fullPhone.value.trim().replaceAll(' ', '');
+
+      if (phone.isEmpty || !phone.startsWith('+')) {
+        MyFullScreenLoader.stopLoading();
+        _isSendingOtp = false;
+        MySnackBarHelpers.errorSnackBar(
+          title: "Invalid Number",
+          message: "Please enter number with country code.",
+        );
+        return;
+      }
+
       await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: newNumber,
-        verificationCompleted: (_) => MyFullScreenLoader.stopLoading(),
-        verificationFailed: (e) {
+        phoneNumber: phone,
+        timeout: Duration(seconds: 60),
+
+        verificationCompleted: (PhoneAuthCredential credential) {},
+
+        verificationFailed: (FirebaseAuthException e) {
           MyFullScreenLoader.stopLoading();
-          Get.snackbar("Verification failed", e.message ?? e.code);
+          _isSendingOtp = false;
+          MySnackBarHelpers.errorSnackBar(
+            title: "Verification Failed",
+            message: e.message ?? e.code,
+          );
         },
-        codeSent: (verificationId, _) {
+
+        codeSent: (String verificationId, int? resendToken) {
+          verifyId = verificationId;
+
           MyFullScreenLoader.stopLoading();
-          _verificationId = verificationId;
+          _isSendingOtp = false;
+
+          MySnackBarHelpers.successSnackBar(
+            title: "OTP Sent",
+            message: "OTP sent to $phone",
+          );
+          debugPrint("Sending OTP to: ${fullPhone.value}");
+
           Get.to(() => ChangeNumberOtpScreen());
         },
-        codeAutoRetrievalTimeout: (verificationId) {
-          MyFullScreenLoader.stopLoading();
-          _verificationId = verificationId;
+
+        codeAutoRetrievalTimeout: (String verificationId) {
+          verifyId = verificationId;
+          _isSendingOtp = false;
         },
       );
     } catch (e) {
       MyFullScreenLoader.stopLoading();
-      Get.back();
-      MySnackBarHelpers.errorSnackBar(title: "Error", message: e.toString());
+      _isSendingOtp = false;
+      MySnackBarHelpers.errorSnackBar(title: "Failed", message: e.toString());
     }
   }
 
   // Confirm New Number Otp
-  Future<void> confirmNewNumberOtp(String otp) async {
+  Future<void> confirmNewNumberOtp() async {
     try {
+      MyFullScreenLoader.openLoadingDialog("Verifying code...");
+
+      final form = upDateUserOtpFormKey.currentState;
+      if (form == null || !form.validate()) {
+        MyFullScreenLoader.stopLoading();
+        return;
+      }
+
+      final otp = otpController.text.trim();
       if (otp.length != 6) {
-        throw "Enter a valid 6-digit code";
+        MyFullScreenLoader.stopLoading();
+        MySnackBarHelpers.errorSnackBar(
+          title: "Invalid Code",
+          message: "Enter a valid 6-digit code.",
+        );
+        return;
+      }
+
+      if (verifyId.isEmpty) {
+        MyFullScreenLoader.stopLoading();
+        MySnackBarHelpers.errorSnackBar(
+          title: "Session Expired",
+          message: "Please request OTP again.",
+        );
+        return;
       }
 
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw "User not logged in";
-      if (_verificationId == null) throw "OTP expired. Try again.";
+      if (user == null) {
+        MyFullScreenLoader.stopLoading();
+        MySnackBarHelpers.errorSnackBar(
+          title: "Error",
+          message: "User not logged in.",
+        );
+        return;
+      }
 
+      //  Create credential
       final credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId!,
+        verificationId: verifyId,
         smsCode: otp,
       );
 
-      try {
-        await user.updatePhoneNumber(credential);
-      } catch (_) {}
+      //  update firebase auth
+      await user.updatePhoneNumber(credential);
 
-      // 🔥 Update Firestore
-      await FirebaseFirestore.instance
-          .collection(MyKeys.userCollection)
-          .doc(user.uid)
-          .set({
-            "phoneNumber": phoneNumberSecond.text.trim(),
-          }, SetOptions(merge: true));
+      //  update firestore
+      final newPhone = fullPhone.value.trim();
+      await userRepo.updateSingleField({"phoneNumber": newPhone});
 
-      // ✅ Update local Rx user (if used)
-      // UserController.instance.user.update((u) {
-      //   if (u == null) return;
-      //   u.phoneNumber = phoneNumberSecond.text.trim();
-      // });
+      // update local getx user
+      userController.user.update((u) {
+        if (u == null) return;
+        u.phoneNumber = newPhone;
+      });
 
-      Get.back(); // OTP screen
-      Get.back(); // Change number screen
-      Get.snackbar("Success", "Your number has been updated");
+      //  refresh user
+      userController.user.refresh();
+
+      MyFullScreenLoader.stopLoading();
+
+      // Close OTP screen
+      Get.offAll(UserProfile());
+
+      MySnackBarHelpers.successSnackBar(
+        title: "Success",
+        message: "Your phone number has been updated everywhere.",
+      );
+    } on FirebaseAuthException catch (e) {
+      MyFullScreenLoader.stopLoading();
+
+      MySnackBarHelpers.errorSnackBar(
+        title: "Verification Failed",
+        message: e.message ?? e.code,
+      );
     } catch (e) {
-      Get.snackbar("Verification failed", e.toString());
+      MyFullScreenLoader.stopLoading();
+      MySnackBarHelpers.errorSnackBar(title: "Error", message: e.toString());
     }
   }
 
-  @override
-  void onClose() {
-    phoneNumberSecond.dispose();
-    otpController.dispose();
-    super.onClose();
+  //--------------- CHANGE NUMBER SECTION END--------------
+
+  // for update user Email
+  Future<void> updateUserEmail() async {
+    try {
+      MyFullScreenLoader.openLoadingDialog(
+        'We are updating your information...',
+      );
+
+      if (!upDateUserEmailFormKey.currentState!.validate()) {
+        MyFullScreenLoader.stopLoading();
+        return;
+      }
+      Map<String, dynamic> map = {"email": emailController.text};
+
+      userController.user.value.email = emailController.text;
+
+      await userRepo.updateSingleField(map);
+
+      userController.user.refresh();
+      MyFullScreenLoader.stopLoading();
+      Get.back();
+      MySnackBarHelpers.successSnackBar(
+        title: "Congratulations",
+        message: "Your e-mail has been updated",
+      );
+    } catch (e) {
+      MyFullScreenLoader.stopLoading();
+      MySnackBarHelpers.errorSnackBar(
+        title: "Update e-mail failed!",
+        message: e.toString(),
+      );
+    }
   }
 }
