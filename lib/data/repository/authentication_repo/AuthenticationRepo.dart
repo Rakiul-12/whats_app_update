@@ -27,22 +27,21 @@ class AuthenticationRepository extends GetxController {
   static AuthenticationRepository get instance => Get.find();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  User? get currentUser => _auth.currentUser;
+  final GetStorage localStorage = GetStorage();
+  late final Messagerepository _messageRepo;
 
   String verifyId = '';
   int? _resendToken;
   bool _isSendingOtp = false;
-
   RxString fullPhone = ''.obs;
+
+  // text controller
   final TextEditingController otpController = TextEditingController();
 
-  User? get currentUser => _auth.currentUser;
-
-  final GetStorage localStorage = GetStorage();
-
+  // form key
   final signUpKey = GlobalKey<FormState>();
   final otpKey = GlobalKey<FormState>();
-
-  late final Messagerepository _messageRepo;
 
   @override
   void onInit() {

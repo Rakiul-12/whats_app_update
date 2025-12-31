@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:pinput/pinput.dart';
 import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/button/MyElevatedButton.dart';
@@ -15,16 +14,19 @@ import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
 class ChangeNumberOtpScreen extends StatelessWidget {
   final String verificationId;
+
   const ChangeNumberOtpScreen({super.key, required this.verificationId});
 
   @override
   Widget build(BuildContext context) {
     final dark = MyHelperFunction.isDarkMode(context);
-    final OtpController = Get.put(ReSendOtpController());
 
-    final controller = Get.find<UpdateUserDetailsController>();
+    final resendOtpController = Get.put(ReSendOtpController());
+    final controller = Get.put(UpdateUserDetailsController());
 
-    controller.verifyId = verificationId;
+    if (controller.verifyId.isEmpty) {
+      controller.verifyId = verificationId;
+    }
 
     final defaultPinTheme = PinTheme(
       width: 55,
@@ -43,35 +45,33 @@ class ChangeNumberOtpScreen extends StatelessWidget {
     );
 
     return Scaffold(
-      backgroundColor: Color(0xFF0B141A),
+      backgroundColor: const Color(0xFF0B141A),
       appBar: MyAppbar(
-        title: Text(
-          "Verify Number",
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
+        title: const Text("Verify Number"),
         showBackArrow: true,
         actions: [
           Obx(() {
             return TextButton(
               onPressed:
-                  OtpController.remainingsec.value == 0 &&
-                      !OtpController.isResend.value
+                  resendOtpController.remainingsec.value == 0 &&
+                      !resendOtpController.isResend.value
                   ? () {
-                      OtpController.resendOtp(() async {
-                        AuthenticationRepository.instance.resendOtp();
-                      }, 120);
+                      resendOtpController.resendOtp(
+                        () => AuthenticationRepository.instance.resendOtp(),
+                        120,
+                      );
                     }
                   : null,
-              child: OtpController.isResend.value
-                  ? SizedBox(
+              child: resendOtpController.isResend.value
+                  ? const SizedBox(
                       height: 16,
                       width: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Text(
-                      OtpController.remainingsec.value == 0
+                      resendOtpController.remainingsec.value == 0
                           ? MyText.verify_phone_number_resent_text
-                          : "Resend in ${OtpController.remainingsec.value}s",
+                          : "Resend in ${resendOtpController.remainingsec.value}s",
                       style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         color: Mycolors.primary,
                         fontWeight: FontWeight.w600,
@@ -84,7 +84,7 @@ class ChangeNumberOtpScreen extends StatelessWidget {
 
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: MyElevatedButton(
-        onPressed: () => controller.confirmNewNumberOtp(),
+        onPressed: controller.confirmNewNumberOtp,
         text: "Verify",
       ),
 
@@ -93,17 +93,13 @@ class ChangeNumberOtpScreen extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(height: Mysize.defaultSpace * 3),
-
-            Center(
-              child: Text(
-                MyText.changeNumberOtpScreenText,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                  color: dark ? Mycolors.light : Mycolors.dark,
-                ),
+            Text(
+              MyText.changeNumberOtpScreenText,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                color: dark ? Mycolors.light : Mycolors.dark,
               ),
             ),
-
             SizedBox(height: Mysize.spaceBtwInputFields * 2),
 
             Form(
@@ -119,8 +115,9 @@ class ChangeNumberOtpScreen extends StatelessWidget {
                   ),
                 ),
                 validator: (v) {
-                  if (v == null || v.trim().length != 6)
+                  if (v == null || v.trim().length != 6) {
                     return "Enter 6 digit OTP";
+                  }
                   return null;
                 },
               ),

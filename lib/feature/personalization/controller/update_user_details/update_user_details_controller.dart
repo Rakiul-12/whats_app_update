@@ -33,7 +33,8 @@ class UpdateUserDetailsController extends GetxController {
   RxString fullPhone = ''.obs;
   String verifyId = '';
   bool _isSendingOtp = false;
-  int? _resendToken;
+  int? _forceResendToken;
+  bool _isResending = false;
 
   @override
   void onInit() {
@@ -193,7 +194,7 @@ class UpdateUserDetailsController extends GetxController {
     try {
       MyFullScreenLoader.openLoadingDialog("Verifying code...");
 
-      // validate otp form
+      //  validate OTP form
       final form = upDateUserOtpFormKey.currentState;
       if (form == null || !form.validate()) {
         MyFullScreenLoader.stopLoading();
@@ -201,6 +202,7 @@ class UpdateUserDetailsController extends GetxController {
       }
 
       final otp = otpController.text.trim();
+
       if (otp.length != 6) {
         MyFullScreenLoader.stopLoading();
         MySnackBarHelpers.errorSnackBar(
@@ -210,11 +212,12 @@ class UpdateUserDetailsController extends GetxController {
         return;
       }
 
+      //  verifyId must exist
       if (verifyId.trim().isEmpty) {
         MyFullScreenLoader.stopLoading();
         MySnackBarHelpers.errorSnackBar(
           title: "Session Expired",
-          message: "Please request OTP again.",
+          message: "Please resend OTP again.",
         );
         return;
       }
@@ -239,19 +242,19 @@ class UpdateUserDetailsController extends GetxController {
         return;
       }
 
-      //  create credential
+      // create credential
       final phoneCred = PhoneAuthProvider.credential(
         verificationId: verifyId.trim(),
         smsCode: otp,
       );
 
-      // update firebase auth phone
+      //  update Firebase Auth phone
       await user.updatePhoneNumber(phoneCred);
 
-      //  update firestore
+      //  update Firestore
       await userRepo.updateSingleField({"phoneNumber": newPhone});
 
-      //  update GetX user object
+      //  update GetX user
       userController.user.update((u) {
         if (u == null) return;
         u.phoneNumber = newPhone;
@@ -268,11 +271,29 @@ class UpdateUserDetailsController extends GetxController {
       Get.offAll(() => UserProfile());
     } on FirebaseAuthException catch (e) {
       MyFullScreenLoader.stopLoading();
-
+      //  number already belongs to another account
+      if (e.code == "credential-already-in-use" ||
+          e.code == "phone-number-already-exists") {
+        MySnackBarHelpers.errorSnackBar(
+          title: "Number already in use",
+          message: "This phone is linked to another account.",
+        );
+        return;
+      }
+      //  requires recent login
       if (e.code == "requires-recent-login") {
         MySnackBarHelpers.errorSnackBar(
           title: "Re-authentication required",
-          message: "Login again then try changing number.",
+          message: "Please login again then try changing number.",
+        );
+        return;
+      }
+      //  OTP expired / invalid
+      if (e.code == "session-expired" ||
+          e.code == "invalid-verification-code") {
+        MySnackBarHelpers.errorSnackBar(
+          title: "OTP Expired",
+          message: "Please resend OTP and try again.",
         );
         return;
       }
@@ -283,6 +304,61 @@ class UpdateUserDetailsController extends GetxController {
       );
     } catch (e) {
       MyFullScreenLoader.stopLoading();
+      MySnackBarHelpers.errorSnackBar(title: "Error", message: e.toString());
+    }
+  }
+
+  // Resend Change Number Otp
+  Future<void> resendChangeNumberOtp() async {
+    if (_isResending) return;
+    _isResending = true;
+
+    try {
+      final phone = fullPhone.value.trim().replaceAll(' ', '');
+
+      if (phone.isEmpty || !phone.startsWith('+')) {
+        _isResending = false;
+        MySnackBarHelpers.errorSnackBar(
+          title: "Invalid Number",
+          message: "Use country code",
+        );
+        return;
+      }
+
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phone,
+        timeout: const Duration(seconds: 60),
+
+        forceResendingToken: _forceResendToken,
+
+        verificationCompleted: (_) {},
+
+        verificationFailed: (FirebaseAuthException e) {
+          _isResending = false;
+          MySnackBarHelpers.errorSnackBar(
+            title: "Resend Failed",
+            message: e.message ?? e.code,
+          );
+        },
+
+        codeSent: (String newVerificationId, int? resendToken) {
+          verifyId = newVerificationId;
+          _forceResendToken = resendToken;
+          _isResending = false;
+
+          MySnackBarHelpers.successSnackBar(
+            title: "OTP Sent",
+            message: "A new OTP has been sent",
+          );
+        },
+
+        codeAutoRetrievalTimeout: (String id) {
+          verifyId = id;
+          _isResending = false;
+        },
+      );
+    } catch (e) {
+      _isResending = false;
       MySnackBarHelpers.errorSnackBar(title: "Error", message: e.toString());
     }
   }
@@ -320,5 +396,11 @@ class UpdateUserDetailsController extends GetxController {
         message: e.toString(),
       );
     }
+  }
+
+  @override
+  void onClose() {
+    otpController.dispose();
+    super.onClose();
   }
 }

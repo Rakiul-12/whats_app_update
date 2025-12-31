@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:whats_app/common/widget/style/screen_padding.dart';
 import 'package:whats_app/data/repository/authentication_repo/AuthenticationRepo.dart';
 import 'package:whats_app/feature/authentication/backend/Re-send_otp_controller/re_send_otp.dart';
+import 'package:whats_app/feature/personalization/controller/update_user_details/update_user_details_controller.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/const/text.dart';
@@ -13,7 +14,7 @@ void showCustomBottomSheet(BuildContext context) {
   bool dark = MyHelperFunction.isDarkMode(context);
 
   final OtpController = Get.put(ReSendOtpController());
-  final controller = AuthenticationRepository.instance;
+  final upDateController = Get.put(UpdateUserDetailsController());
   showModalBottomSheet(
     context: context,
     backgroundColor: dark ? Mycolors.light : Mycolors.dark,
@@ -53,7 +54,7 @@ void showCustomBottomSheet(BuildContext context) {
                               !OtpController.isResend.value
                           ? () {
                               OtpController.resendOtp(() async {
-                                controller.resendOtp();
+                                upDateController.resendChangeNumberOtp();
                               }, 120);
                             }
                           : null,
