@@ -10,7 +10,6 @@ import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/const/text.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
-import 'package:whats_app/utiles/validation/Validations.dart';
 
 class ReAuthenticate extends StatelessWidget {
   const ReAuthenticate({super.key});

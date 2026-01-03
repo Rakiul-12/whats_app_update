@@ -7,7 +7,6 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:whats_app/data/repository/user/UserRepository.dart';
 import 'package:whats_app/feature/NavBar/navbar.dart';
-import 'package:whats_app/feature/authentication/Model/UserModel.dart';
 import 'package:whats_app/feature/authentication/backend/MessageRepo/MessageRepository.dart';
 import 'package:whats_app/feature/authentication/screens/log_in_screen/log_in_screen.dart';
 import 'package:whats_app/feature/authentication/screens/verify_screen/verify_screen.dart';
@@ -37,7 +36,7 @@ class AuthenticationRepository extends GetxController {
   RxString fullPhone = ''.obs;
 
   // text controller
-  final TextEditingController otpController = TextEditingController();
+  final otpController = TextEditingController();
 
   // form key
   final signUpKey = GlobalKey<FormState>();

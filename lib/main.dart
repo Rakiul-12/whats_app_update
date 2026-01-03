@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:whats_app/data/service/App_Lifecycle_Service/app_lifecycle_service.dart';
 import 'package:whats_app/data/service/notification_service/NotificationService.dart';
 import 'package:whats_app/data/service/zego_service.dart';
 import 'package:whats_app/feature/personalization/controller/UserController.dart';
@@ -29,6 +30,7 @@ Future<void> main() async {
 
   Get.put(AuthenticationRepository(), permanent: true);
   Get.put(UserController(), permanent: true);
+  Get.put(AppLifecycleService(), permanent: true);
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 

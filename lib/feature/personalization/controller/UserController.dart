@@ -8,6 +8,7 @@ import 'package:whats_app/data/repository/user/UserRepository.dart';
 import 'package:whats_app/feature/NavBar/navbar.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
 import 'package:whats_app/feature/authentication/screens/welcome_screen.dart';
+import 'package:whats_app/utiles/const/keys.dart';
 import 'package:whats_app/utiles/popup/MyFullScreenLoader.dart';
 import 'package:whats_app/utiles/popup/SnackbarHepler.dart';
 import 'package:dio/dio.dart' as dio;
@@ -171,13 +172,18 @@ class UserController extends GetxController {
   Future<void> updateActiveStatus(bool isOnline) async {
     try {
       final uid = FirebaseAuth.instance.currentUser!.uid;
+      debugPrint("🟢 updateActiveStatus called => isOnline=$isOnline uid=$uid");
 
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
-        'isOnline': isOnline,
-        'lastActive': FieldValue.serverTimestamp(),
-      });
+      await FirebaseFirestore.instance
+          .collection(MyKeys.userCollection)
+          .doc(uid)
+          .update({
+            'isOnline': isOnline,
+            'lastActive': FieldValue.serverTimestamp(),
+          });
+      debugPrint("🟢 updateActiveStatus called => isOnline=$isOnline uid=$uid");
     } catch (e) {
-      debugPrint("Update active status failed: $e");
+      debugPrint("❌ updateActiveStatus failed: $e");
     }
   }
 
