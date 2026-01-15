@@ -48,25 +48,24 @@ class CallRepo {
         data["createdAt"] = now;
       }
 
-      final safeCallerName = _safeStr(callerName);
-      final safeCallerPhone = _safeStr(callerPhone);
-      final safeReceiverName = _safeStr(receiverName);
-      final safeReceiverPhone = _safeStr(receiverPhone);
+      final cn = _safe(callerName);
+      final cp = _safe(callerPhone);
+      final rn = _safe(receiverName);
+      final rp = _safe(receiverPhone);
 
-      if (safeCallerName != null) data["callerName"] = safeCallerName;
-      if (safeCallerPhone != null) data["callerPhone"] = safeCallerPhone;
-      if (safeReceiverName != null) data["receiverName"] = safeReceiverName;
-      if (safeReceiverPhone != null) data["receiverPhone"] = safeReceiverPhone;
+      if (cn != null) data["callerName"] = cn;
+      if (cp != null) data["callerPhone"] = cp;
+      if (rn != null) data["receiverName"] = rn;
+      if (rp != null) data["receiverPhone"] = rp;
 
       tx.set(doc, data, SetOptions(merge: true));
     });
   }
 
-  static String? _safeStr(String? v) {
+  static String? _safe(String? v) {
     if (v == null) return null;
     final s = v.trim();
-    if (s.isEmpty) return null;
-    return s;
+    return s.isEmpty ? null : s;
   }
 
   static Future<void> saveCallMessage({

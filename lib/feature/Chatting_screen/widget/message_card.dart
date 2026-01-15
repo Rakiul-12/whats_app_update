@@ -14,10 +14,12 @@ class MessageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isDark = MyHelperFunction.isDarkMode(context);
 
-    // message" and "msg"
+    //  message text
     final String msg = (message['message'] ?? message['msg'] ?? '').toString();
 
-    final dynamic time = message['sent'];
+    final dynamic time =
+        message['sent'] ?? message['time'] ?? message['createdAt'];
+
     final bool isSeen = (message['read'] ?? '').toString().isNotEmpty;
 
     final String myId = FirebaseAuth.instance.currentUser!.uid;
@@ -28,36 +30,41 @@ class MessageCard extends StatelessWidget {
     final bool isImage = type == 'image';
     final bool isCall = type == 'call';
 
-    //  CALL fields
-
-    final String rawCallType = (message['callType'] ?? 'audio').toString();
-    final String callType = rawCallType.toLowerCase() == 'audio'
-        ? 'voice'
-        : rawCallType.toLowerCase(); // keep "video" as video
+    final String rawCallType = (message['callType'] ?? 'audio')
+        .toString()
+        .toLowerCase();
+    final bool isVideo = rawCallType == 'video';
+    final String callTypeLabel = isVideo ? "Video" : "Voice";
 
     final String callStatus = (message['callStatus'] ?? '')
-        .toString(); // missed/ended/answered/rejected
-    final int durationSec =
-        int.tryParse((message['durationSec'] ?? 0).toString()) ?? 0;
+        .toString()
+        .toLowerCase();
 
-    final bool isMissed = callStatus.toLowerCase() == 'missed';
-    final bool isRejected = callStatus.toLowerCase() == 'rejected';
+    final int durationSec = _toInt(message['durationSec']);
 
-    final IconData callIcon = callType == 'video' ? Icons.videocam : Icons.call;
+    final bool isMissed = callStatus == 'missed';
+    final bool isRejected = callStatus == 'rejected';
+    final bool isCanceled = callStatus == 'canceled';
+    final bool isEnded = callStatus == 'ended';
 
-    //  text
+    final IconData callIcon = isVideo ? Icons.videocam : Icons.call;
+
     String callTitle;
     if (isMissed) {
-      callTitle = "Missed ${callType == 'video' ? 'video' : 'voice'} call";
+      callTitle = "Missed $callTypeLabel call";
     } else if (isRejected) {
-      callTitle = "Rejected ${callType == 'video' ? 'video' : 'voice'} call";
+      callTitle = "Declined $callTypeLabel call";
+    } else if (isCanceled) {
+      callTitle = "Canceled $callTypeLabel call";
+    } else if (isEnded) {
+      callTitle = "$callTypeLabel call";
     } else {
-      callTitle = "${callType == 'video' ? 'Video' : 'Voice'} call";
+      callTitle = "$callTypeLabel call";
     }
 
     String callSubtitle = "";
-    if (!isMissed && !isRejected && durationSec > 0) {
-      callSubtitle = _formatDuration(durationSec);
+    if (isEnded && durationSec > 0) {
+      callSubtitle = _formatDurationClock(durationSec);
     }
 
     return Align(
@@ -117,7 +124,9 @@ class MessageCard extends StatelessWidget {
                   Icon(
                     callIcon,
                     size: 18,
-                    color: isMissed ? Colors.redAccent : Colors.white,
+                    color: (isMissed || isRejected)
+                        ? Colors.redAccent
+                        : Colors.white,
                   ),
                   const SizedBox(width: 8),
                   Flexible(
@@ -198,10 +207,16 @@ class MessageCard extends StatelessWidget {
     );
   }
 
-  String _formatDuration(int seconds) {
-    final int m = seconds ~/ 60;
-    final int s = seconds % 60;
-    if (m <= 0) return "${s}s";
-    return "${m}m ${s}s";
+  int _toInt(dynamic v) {
+    if (v is int) return v;
+    if (v is double) return v.floor();
+    if (v is String) return int.tryParse(v) ?? 0;
+    return 0;
+  }
+
+  String _formatDurationClock(int seconds) {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return "${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}";
   }
 }

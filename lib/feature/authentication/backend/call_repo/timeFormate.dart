@@ -1,12 +1,18 @@
 import 'package:intl/intl.dart';
 
-String formatCallTime(int millis) {
-  final dt = DateTime.fromMillisecondsSinceEpoch(millis);
-  return DateFormat('dd MMM, hh:mm a').format(dt);
-}
+class CallFormat {
+  static String timeFromMillis(dynamic value) {
+    if (value == null) return "";
+    if (value is int) {
+      final dt = DateTime.fromMillisecondsSinceEpoch(value);
+      return DateFormat('dd MMM yyyy, hh:mm a').format(dt);
+    }
+    return "";
+  }
 
-String formatDuration(int sec) {
-  final m = sec ~/ 60;
-  final s = sec % 60;
-  return "${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}";
+  static String duration(int sec) {
+    final m = sec ~/ 60;
+    final s = sec % 60;
+    return "${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}";
+  }
 }
