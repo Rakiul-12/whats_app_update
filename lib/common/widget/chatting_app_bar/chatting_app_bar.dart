@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
-import 'package:whats_app/feature/Chatting_screen/widget/callPage.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/image.dart';
+import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 import 'package:zego_uikit/zego_uikit.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ChatAppBar({
@@ -45,31 +46,24 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final bool isDark = MyHelperFunction.isDarkMode(context);
 
-    final me = FirebaseAuth.instance.currentUser;
-    final myId = me?.uid ?? "";
-    final callId = "call_${myId}_${DateTime.now().millisecondsSinceEpoch}";
+    final me = FirebaseAuth.instance.currentUser!;
+    final myId = me.uid;
 
-    // Zego invitees
+    // ZEGO invitee
     final invitees = [
       ZegoUIKitUser(id: otherUser.id, name: otherUser.username),
     ];
 
     final convId = conversationId(myId, otherUser.id);
 
-    final audioCallId = "call_${myId}_${DateTime.now().millisecondsSinceEpoch}";
-    final audioCustomData = jsonEncode({
-      "conversationId": convId,
-      "fromId": myId,
-      "toId": otherUser.id,
-      "callType": "audio",
-    });
+    String newCallId() =>
+        "call_${myId}_${DateTime.now().millisecondsSinceEpoch}";
 
-    final videoCallId = "call_${myId}_${DateTime.now().millisecondsSinceEpoch}";
-    final videoCustomData = jsonEncode({
+    String customData(String callType) => jsonEncode({
       "conversationId": convId,
       "fromId": myId,
       "toId": otherUser.id,
-      "callType": "video",
+      "callType": callType, // audio | video
     });
 
     return AppBar(
@@ -149,51 +143,44 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
+
       actions: [
-        //  audio call button
-        IconButton(
-          icon: const Icon(Icons.videocam),
-          onPressed: () {
-            final me = FirebaseAuth.instance.currentUser!;
-            final myId = me.uid;
-
-            final callId =
-                "call_${myId}_${DateTime.now().millisecondsSinceEpoch}";
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CallPage(
-                  otherUser: otherUser,
-                  isVideoCall: true,
-                  callId: callId,
-                ),
+        // VIDEO CALL
+        SizedBox(
+          width: 70,
+          height: 70,
+          child: ZegoSendCallInvitationButton(
+            resourceID: "ZegoCall",
+            isVideoCall: true,
+            invitees: invitees,
+            callID: newCallId(),
+            customData: customData("video"),
+            icon: ButtonIcon(
+              icon: Icon(
+                Icons.videocam,
+                color: isDark ? Mycolors.light : Mycolors.textPrimary,
               ),
-            );
-          },
+            ),
+          ),
         ),
 
-        // vide call button
-        IconButton(
-          icon: const Icon(Icons.call),
-          onPressed: () {
-            final me = FirebaseAuth.instance.currentUser!;
-            final myId = me.uid;
-
-            final callId =
-                "call_${myId}_${DateTime.now().millisecondsSinceEpoch}";
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CallPage(
-                  otherUser: otherUser,
-                  isVideoCall: false,
-                  callId: callId,
-                ),
+        // AUDIO CALL
+        SizedBox(
+          height: 70,
+          width: 70,
+          child: ZegoSendCallInvitationButton(
+            resourceID: "ZegoCall",
+            isVideoCall: false,
+            invitees: invitees,
+            callID: newCallId(),
+            customData: customData("audio"),
+            icon: ButtonIcon(
+              icon: Icon(
+                Icons.call,
+                color: isDark ? Mycolors.light : Mycolors.textPrimary,
               ),
-            );
-          },
+            ),
+          ),
         ),
 
         IconButton(

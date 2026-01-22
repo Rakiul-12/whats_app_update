@@ -33,7 +33,7 @@ class chat_screen_chat_list extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No users found"));
+            return const Center(child: Text("No call history"));
           }
 
           final users = snapshot.data!.docs
@@ -115,7 +115,7 @@ class chat_screen_chat_list extends StatelessWidget {
                               radius: 24,
                               backgroundImage: user.profilePicture.isNotEmpty
                                   ? NetworkImage(user.profilePicture)
-                                  : const AssetImage(MyImage.onProfileScreen),
+                                  : AssetImage(MyImage.onProfileScreen),
                             ),
                           ),
                         ),

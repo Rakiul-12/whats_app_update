@@ -16,6 +16,7 @@ import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
 class chat_screen extends StatelessWidget {
   const chat_screen({super.key});
+  // final UserModel otherUser;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +76,7 @@ class chat_screen extends StatelessWidget {
           },
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.zero,
-            backgroundColor: const Color.fromARGB(255, 2, 173, 65),
+            backgroundColor: Color.fromARGB(255, 2, 173, 65),
             side: BorderSide.none,
           ),
           child: Icon(

@@ -20,14 +20,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 final navigatorKey = GlobalKey<NavigatorState>();
-
 StreamSubscription<User?>? _authSub;
 
 Future<void> main() async {
-  // initialize firebase
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // controller/repo
   Get.put(AuthenticationRepository(), permanent: true);
   Get.put(UserController(), permanent: true);
@@ -40,44 +39,30 @@ Future<void> main() async {
   await NotificationService.instance.initLocalNotifications();
   NotificationService.instance.initFcmListeners();
   await NotificationService.instance.requestAndroidPermissionIfNeeded();
-
-  // call service for zego
-  FirebaseAuth.instance.authStateChanges().listen((user) async {
+  _authSub = FirebaseAuth.instance.authStateChanges().listen((
+    User? user,
+  ) async {
     if (user == null) {
       ZegoService.instance.uninit();
       return;
     }
 
-    final safeId = user.uid;
-    final safeName = (user.displayName ?? user.phoneNumber ?? '').trim();
+    final String userId = user.uid;
 
-    await ZegoService.instance.init(
-      navigatorKey: navigatorKey,
-      userId: safeId,
-      userName: safeName,
-    );
-  });
-  _authSub = FirebaseAuth.instance.authStateChanges().listen((User? u) async {
-    if (u == null) {
-      ZegoService.instance.uninit();
-      return;
-    }
-    final String userId = u.uid;
-    // for ZEGO
-    final String rawName = (u.displayName ?? '').trim();
-    final String safeName = rawName.isNotEmpty
-        ? rawName
-        : ((u.phoneNumber ?? '').trim().isNotEmpty
-              ? u.phoneNumber!.trim()
-              : 'Guest');
+    final String safeName =
+        (user.displayName ?? user.phoneNumber ?? "Guest").trim().isEmpty
+        ? "Guest"
+        : (user.displayName ?? user.phoneNumber ?? "Guest").trim();
 
-    await ZegoService.instance.init(
+    final String userPhone = (user.phoneNumber ?? "").trim();
+
+    await ZegoService.instance.initIfNeeded(
       navigatorKey: navigatorKey,
       userId: userId,
       userName: safeName,
+      userPhone: userPhone,
     );
   });
-  // call service for zego end
 
   runApp(MyApp(navigatorKey: navigatorKey));
 }

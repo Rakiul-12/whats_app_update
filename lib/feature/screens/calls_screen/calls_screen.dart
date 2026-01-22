@@ -13,9 +13,10 @@ class call_screen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isDark = MyHelperFunction.isDarkMode(context);
+    final bool isDark = MyHelperFunction.isDarkMode(context);
+
     return Scaffold(
-      // floation_ac_btn
+      // floating button
       floatingActionButton: SizedBox(
         height: Mysize.floatingButtonHeight,
         width: Mysize.anotherfloatingButtonWidth,
@@ -23,7 +24,7 @@ class call_screen extends StatelessWidget {
           onPressed: () {},
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.zero,
-            backgroundColor: const Color.fromARGB(255, 2, 173, 65),
+            backgroundColor: Color.fromARGB(255, 2, 173, 65),
             side: BorderSide.none,
           ),
           child: Icon(
@@ -38,53 +39,51 @@ class call_screen extends StatelessWidget {
       appBar: AppBar(
         title: Text("Calls", style: Theme.of(context).textTheme.headlineMedium),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.search)),
-          IconButton(onPressed: () {}, icon: Icon(Icons.more_vert)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert)),
         ],
       ),
 
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: MyPadding.screenPadding,
-          child: Column(
-            children: [
-              // 1st_heading
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Custom_circualar_icon_and_text(
-                    icon: Icons.call,
-                    text: "Call",
-                    onTap: () {},
-                  ),
+      body: Padding(
+        padding: MyPadding.screenPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // top buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Custom_circualar_icon_and_text(
+                  icon: Icons.call,
+                  text: "Call",
+                  onTap: () {},
+                ),
+                Custom_circualar_icon_and_text(
+                  icon: Icons.calendar_month,
+                  text: "Schedule",
+                  onTap: () {},
+                ),
+                Custom_circualar_icon_and_text(
+                  icon: Icons.dialpad_outlined,
+                  text: "Keypad",
+                  onTap: () {},
+                ),
+                Custom_circualar_icon_and_text(
+                  icon: Iconsax.heart,
+                  text: "Favourite",
+                  onTap: () {},
+                ),
+              ],
+            ),
 
-                  Custom_circualar_icon_and_text(
-                    icon: Icons.calendar_month,
-                    text: "Schedule",
-                    onTap: () {},
-                  ),
+            SizedBox(height: Mysize.spaceBtwSections),
 
-                  Custom_circualar_icon_and_text(
-                    icon: Icons.dialpad_outlined,
-                    text: "Keypad",
-                    onTap: () {},
-                  ),
+            // heading
+            const MySectionHeading(title: "Recent", showActionBtn: false),
+            SizedBox(height: Mysize.spaceBtwItems),
 
-                  Custom_circualar_icon_and_text(
-                    icon: Iconsax.heart,
-                    text: "Favoutite",
-                    onTap: () {},
-                  ),
-                ],
-              ),
-
-              SizedBox(height: Mysize.spaceBtwSections),
-              // calls_section
-              MySectionHeading(title: "Recent", showActionBtn: false),
-              SizedBox(height: Mysize.spaceBtwItems),
-              Calls_list(),
-            ],
-          ),
+            Expanded(child: Calls_list()),
+          ],
         ),
       ),
     );

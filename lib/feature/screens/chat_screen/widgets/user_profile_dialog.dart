@@ -10,8 +10,9 @@ import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
 void showUesrDialog(context, UserModel user) {
-  final isDark = MyHelperFunction.isDarkMode(context);
+  // final UserModel otherUser;
 
+  final isDark = MyHelperFunction.isDarkMode(context);
   showDialog<void>(
     context: context,
     builder: (BuildContext dialogContext) {
@@ -54,13 +55,10 @@ void showUesrDialog(context, UserModel user) {
                     Get.off(() => ChattingScreen(), arguments: user),
                 icon: Icon(Iconsax.message, color: Mycolors.buttonPrimary),
               ),
+
               IconButton(
                 onPressed: () {},
                 icon: Icon(Iconsax.call, color: Mycolors.buttonPrimary),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Iconsax.video, color: Mycolors.buttonPrimary),
               ),
               IconButton(
                 onPressed: () {},

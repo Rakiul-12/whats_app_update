@@ -52,7 +52,7 @@ class update_screen extends StatelessWidget {
               onPressed: () {},
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.zero,
-                backgroundColor: const Color.fromARGB(255, 2, 173, 65),
+                backgroundColor: Color.fromARGB(255, 2, 173, 65),
                 side: BorderSide.none,
               ),
               child: Icon(

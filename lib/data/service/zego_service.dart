@@ -1,288 +1,233 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:whats_app/data/repository/authentication_repo/AuthenticationRepo.dart';
-import 'package:whats_app/feature/authentication/backend/call_repo/call_repo.dart';
-import 'package:whats_app/utiles/const/keys.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
+import 'package:whats_app/feature/authentication/backend/call_repo/call_repo.dart'
+    as callr;
 
 class ZegoService {
   ZegoService._();
   static final ZegoService instance = ZegoService._();
 
-  final authRepo = AuthenticationRepository.instance;
-
   bool _inited = false;
-  bool get isInited => _inited;
-  final endTime = DateTime.now().millisecondsSinceEpoch;
 
-  final Map<String, Map<String, dynamic>> _callData = {};
+  late String _myId;
+  late String _myName;
+  late String _myPhone;
+
   String? _lastOutgoingCallId;
+  final Map<String, Map<String, dynamic>> _callData = {};
 
-  Future<void> init({
+  Future<void> initIfNeeded({
     required GlobalKey<NavigatorState> navigatorKey,
     required String userId,
     required String userName,
+    required String userPhone,
   }) async {
-    final safeId = userId.trim();
-    if (safeId.isEmpty) {
-      debugPrint("ZEGO init blocked: userId empty");
-      return;
-    }
-
-    String safeName = userName.trim();
-    if (safeName.isEmpty) {
-      safeName = (await authRepo.getSafeUserNameFromFirestore(safeId)).trim();
-    }
-    if (safeName.isEmpty) safeName = "Guest";
-
     if (_inited) return;
+
+    _myId = userId.trim();
+    _myName = userName.trim().isEmpty ? "Guest" : userName.trim();
+    _myPhone = userPhone.trim();
+
+    if (_myId.isEmpty) return;
 
     ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
 
-    try {
-      await ZegoUIKitPrebuiltCallInvitationService().init(
-        appID: 1791254756,
-        appSign: MyKeys.zegoAppSignInKey,
-        userID: safeId,
-        userName: safeName,
-        plugins: [ZegoUIKitSignalingPlugin()],
-
-        invitationEvents: ZegoUIKitPrebuiltCallInvitationEvents(
-          onOutgoingCallSent:
-              (callID, caller, callType, callees, customData) async {
-                try {
-                  _lastOutgoingCallId = callID;
-
-                  final data = _safeDecode(customData);
-                  if (data != null) _callData[callID] = data;
-
-                  final fromId = (data?["fromId"] ?? caller.id).toString();
-                  final toId =
-                      (data?["toId"] ??
-                              (callees.isNotEmpty ? callees.first.id : ""))
-                          .toString();
-                  final callTypeStr = (data?["callType"] ?? "video").toString();
-
-                  await CallRepo.upsertCall(
-                    callId: callID,
-                    callerId: fromId,
-                    receiverId: toId,
-                    callType: (callTypeStr == "audio")
-                        ? CallType.audio
-                        : CallType.video,
-                    status: CallStatus.ringing,
-                    startedAt: null,
-                    endedAt: null,
-                    durationSec: 0,
-                  );
-                } catch (e) {
-                  debugPrint("onOutgoingCallSent error: $e");
-                }
-              },
-
-          onOutgoingCallAccepted: (callID, callee) async {
-            try {
-              final now = DateTime.now().millisecondsSinceEpoch;
-              final data = _callData[callID];
-
-              final fromId = (data?["fromId"] ?? safeId).toString();
-              final toId = (data?["toId"] ?? callee.id).toString();
-              final callTypeStr = (data?["callType"] ?? "video").toString();
-
-              await CallRepo.upsertCall(
-                callId: callID,
-                callerId: fromId,
-                receiverId: toId,
-                callType: (callTypeStr == "audio")
-                    ? CallType.audio
-                    : CallType.video,
-                status: CallStatus.answered,
-                startedAt: now,
-              );
-            } catch (e) {
-              debugPrint("onOutgoingCallAccepted error: $e");
-            }
-          },
-
-          onOutgoingCallDeclined: (callID, callee, customData) async {
-            try {
-              final now = DateTime.now().millisecondsSinceEpoch;
-
-              final data = _safeDecode(customData) ?? _callData[callID];
-              if (data != null) _callData[callID] = data;
-
-              final fromId = (data?["fromId"] ?? safeId).toString();
-              final toId = (data?["toId"] ?? callee.id).toString();
-              final convId = (data?["conversationId"] ?? "").toString();
-              final callTypeStr = (data?["callType"] ?? "video").toString();
-
-              final ct = (callTypeStr == "audio")
-                  ? CallType.audio
-                  : CallType.video;
-
-              await CallRepo.upsertCall(
-                callId: callID,
-                callerId: fromId,
-                receiverId: toId,
-                callType: ct,
-                status: CallStatus.rejected,
-                endedAt: now,
-                durationSec: 0,
-              );
-
-              if (convId.isNotEmpty) {
-                await CallRepo.saveCallMessage(
-                  conversationId: convId,
-                  fromId: fromId,
-                  toId: toId,
-                  callType: ct,
-                  status: CallStatus.rejected,
-                  durationSec: 0,
-                  callId: callID,
-                  timeMs: endTime,
-                );
-              }
-            } catch (e) {
-              debugPrint("onOutgoingCallDeclined error: $e");
-            }
-          },
-
-          onOutgoingCallTimeout: (callID, callees, isVideoCall) async {
-            try {
-              final now = DateTime.now().millisecondsSinceEpoch;
-              final data = _callData[callID];
-
-              final fromId = (data?["fromId"] ?? safeId).toString();
-              final toId =
-                  (data?["toId"] ??
-                          (callees.isNotEmpty ? callees.first.id : ""))
-                      .toString();
-              final convId = (data?["conversationId"] ?? "").toString();
-
-              final ct = isVideoCall ? CallType.video : CallType.audio;
-
-              await CallRepo.upsertCall(
-                callId: callID,
-                callerId: fromId,
-                receiverId: toId,
-                callType: ct,
-                status: CallStatus.missed,
-                endedAt: now,
-                durationSec: 0,
-              );
-
-              if (convId.isNotEmpty) {
-                await CallRepo.saveCallMessage(
-                  conversationId: convId,
-                  fromId: fromId,
-                  toId: toId,
-                  callType: ct,
-                  status: CallStatus.missed,
-                  durationSec: 0,
-                  callId: callID,
-                  timeMs: endTime,
-                );
-              }
-            } catch (e) {
-              debugPrint("onOutgoingCallTimeout error: $e");
-            }
-          },
-
-          onOutgoingCallCancelButtonPressed: () async {
-            try {
-              final callID = _lastOutgoingCallId;
-              if (callID == null) return;
-
-              final now = DateTime.now().millisecondsSinceEpoch;
-              final data = _callData[callID];
-
-              final fromId = (data?["fromId"] ?? safeId).toString();
-              final toId = (data?["toId"] ?? "").toString();
-              final convId = (data?["conversationId"] ?? "").toString();
-              final callTypeStr = (data?["callType"] ?? "video").toString();
-              final ct = (callTypeStr == "audio")
-                  ? CallType.audio
-                  : CallType.video;
-
-              await CallRepo.upsertCall(
-                callId: callID,
-                callerId: fromId,
-                receiverId: toId,
-                callType: ct,
-                status: CallStatus.canceled,
-                endedAt: now,
-                durationSec: 0,
-              );
-
-              if (convId.isNotEmpty && toId.isNotEmpty) {
-                await CallRepo.saveCallMessage(
-                  conversationId: convId,
-                  fromId: fromId,
-                  toId: toId,
-                  callType: ct,
-                  status: CallStatus.canceled,
-                  durationSec: 0,
-                  callId: callID,
-                  timeMs: endTime,
-                );
-              }
-            } catch (e) {
-              debugPrint("onOutgoingCallCancelButtonPressed error: $e");
-            }
-          },
-
-          onIncomingCallCanceled: (callID, caller, customData) async {
-            try {
-              final now = DateTime.now().millisecondsSinceEpoch;
+    await ZegoUIKitPrebuiltCallInvitationService().init(
+      appID: 1791254756,
+      appSign:
+          "6d100a52da23818ae74db2848a4e1dc0d91f09cf1842555b040626051b51ca93",
+      userID: _myId,
+      userName: _myName,
+      plugins: [ZegoUIKitSignalingPlugin()],
+      invitationEvents: ZegoUIKitPrebuiltCallInvitationEvents(
+        // =============================
+        // OUTGOING SENT
+        // =============================
+        onOutgoingCallSent:
+            (callID, caller, zegoCallType, callees, customData) async {
+              _lastOutgoingCallId = callID;
 
               final data = _safeDecode(customData);
               if (data != null) _callData[callID] = data;
 
-              final fromId = (data?["fromId"] ?? caller.id).toString();
-              final toId = (data?["toId"] ?? safeId).toString();
-              final convId = (data?["conversationId"] ?? "").toString();
-              final callTypeStr = (data?["callType"] ?? "video").toString();
-              final ct = (callTypeStr == "audio")
-                  ? CallType.audio
-                  : CallType.video;
+              final toId =
+                  (data?["toId"] ??
+                          (callees.isNotEmpty ? callees.first.id : ""))
+                      .toString()
+                      .trim();
 
-              await CallRepo.upsertCall(
+              final convId = (data?["conversationId"] ?? "").toString().trim();
+
+              final bool isVideo =
+                  (data?["callType"]?.toString().toLowerCase() == "video");
+
+              // ✅ FIX: use AppCallType
+              final callr.AppCallType ct = isVideo
+                  ? callr.AppCallType.video
+                  : callr.AppCallType.audio;
+
+              await callr.CallRepo.upsertCall(
                 callId: callID,
-                callerId: fromId,
+                callerId: _myId,
                 receiverId: toId,
                 callType: ct,
-                status: CallStatus.canceled,
-                endedAt: now,
-                durationSec: 0,
+                status: callr.AppCallStatus.ringing,
+                callerName: _myName,
+                callerPhone: _myPhone,
               );
 
-              if (convId.isNotEmpty) {
-                await CallRepo.saveCallMessage(
+              // (optional) show “Calling…” inside chat
+              if (convId.isNotEmpty && toId.isNotEmpty) {
+                await callr.CallRepo.saveCallMessage(
                   conversationId: convId,
-                  fromId: fromId,
+                  fromId: _myId,
                   toId: toId,
                   callType: ct,
-                  status: CallStatus.canceled,
+                  status: callr.AppCallStatus.ringing,
+                  timeMs: DateTime.now().millisecondsSinceEpoch,
                   durationSec: 0,
                   callId: callID,
-                  timeMs: endTime,
                 );
               }
-            } catch (e) {
-              debugPrint("onIncomingCallCanceled error: $e");
-            }
-          },
-        ),
-      );
+            },
 
-      _inited = true;
-      debugPrint("ZEGO init OK: $safeId / $safeName");
-    } catch (e) {
-      _inited = false;
-      debugPrint("ZEGO init failed: $e");
-    }
+        // =============================
+        // OUTGOING TIMEOUT -> MISSED
+        // =============================
+        onOutgoingCallTimeout: (callID, callees, isVideoCall) async {
+          final now = DateTime.now().millisecondsSinceEpoch;
+          final data = _callData[callID];
+
+          final toId =
+              (data?["toId"] ?? (callees.isNotEmpty ? callees.first.id : ""))
+                  .toString()
+                  .trim();
+
+          final convId = (data?["conversationId"] ?? "").toString().trim();
+
+          // ✅ FIX: use AppCallType
+          final callr.AppCallType ct = isVideoCall
+              ? callr.AppCallType.video
+              : callr.AppCallType.audio;
+
+          await callr.CallRepo.upsertCall(
+            callId: callID,
+            callerId: _myId,
+            receiverId: toId,
+            callType: ct,
+            status: callr.AppCallStatus.missed,
+            endedAt: now,
+            durationSec: 0,
+            callerName: _myName,
+            callerPhone: _myPhone,
+          );
+
+          if (convId.isNotEmpty && toId.isNotEmpty) {
+            await callr.CallRepo.saveCallMessage(
+              conversationId: convId,
+              fromId: _myId,
+              toId: toId,
+              callType: ct,
+              status: callr.AppCallStatus.missed,
+              timeMs: now,
+              durationSec: 0,
+              callId: callID,
+            );
+          }
+        },
+
+        // =============================
+        // OUTGOING CANCEL BUTTON
+        // =============================
+        onOutgoingCallCancelButtonPressed: () async {
+          final callID = _lastOutgoingCallId;
+          if (callID == null) return;
+
+          final now = DateTime.now().millisecondsSinceEpoch;
+          final data = _callData[callID];
+
+          final toId = (data?["toId"] ?? "").toString().trim();
+          final convId = (data?["conversationId"] ?? "").toString().trim();
+          final bool isVideo =
+              (data?["callType"]?.toString().toLowerCase() == "video");
+
+          final callr.AppCallType ct = isVideo
+              ? callr.AppCallType.video
+              : callr.AppCallType.audio;
+
+          await callr.CallRepo.upsertCall(
+            callId: callID,
+            callerId: _myId,
+            receiverId: toId,
+            callType: ct,
+            status: callr.AppCallStatus.canceled,
+            endedAt: now,
+            durationSec: 0,
+            callerName: _myName,
+            callerPhone: _myPhone,
+          );
+
+          if (convId.isNotEmpty && toId.isNotEmpty) {
+            await callr.CallRepo.saveCallMessage(
+              conversationId: convId,
+              fromId: _myId,
+              toId: toId,
+              callType: ct,
+              status: callr.AppCallStatus.canceled,
+              timeMs: now,
+              durationSec: 0,
+              callId: callID,
+            );
+          }
+        },
+
+        // =============================
+        // INCOMING CANCELED (receiver side)
+        // =============================
+        onIncomingCallCanceled: (callID, caller, customData) async {
+          final now = DateTime.now().millisecondsSinceEpoch;
+
+          final data = _safeDecode(customData);
+          if (data != null) _callData[callID] = data;
+
+          final fromId = (data?["fromId"] ?? caller.id).toString().trim();
+          final convId = (data?["conversationId"] ?? "").toString().trim();
+          final bool isVideo =
+              (data?["callType"]?.toString().toLowerCase() == "video");
+
+          final callr.AppCallType ct = isVideo
+              ? callr.AppCallType.video
+              : callr.AppCallType.audio;
+
+          await callr.CallRepo.upsertCall(
+            callId: callID,
+            callerId: fromId,
+            receiverId: _myId,
+            callType: ct,
+            status: callr.AppCallStatus.canceled,
+            endedAt: now,
+            durationSec: 0,
+          );
+
+          if (convId.isNotEmpty) {
+            await callr.CallRepo.saveCallMessage(
+              conversationId: convId,
+              fromId: fromId,
+              toId: _myId,
+              callType: ct,
+              status: callr.AppCallStatus.canceled,
+              timeMs: now,
+              durationSec: 0,
+              callId: callID,
+            );
+          }
+        },
+      ),
+    );
+
+    _inited = true;
   }
 
   void uninit() {
@@ -290,8 +235,8 @@ class ZegoService {
       ZegoUIKitPrebuiltCallInvitationService().uninit();
     } catch (_) {}
     _inited = false;
-    _callData.clear();
     _lastOutgoingCallId = null;
+    _callData.clear();
   }
 
   Map<String, dynamic>? _safeDecode(String? customData) {
@@ -300,8 +245,7 @@ class ZegoService {
     if (s.isEmpty) return null;
     try {
       final decoded = jsonDecode(s);
-      if (decoded is Map<String, dynamic>) return decoded;
-      return null;
+      return decoded is Map<String, dynamic> ? decoded : null;
     } catch (_) {
       return null;
     }

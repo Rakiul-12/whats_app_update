@@ -1,4 +1,4 @@
-import 'package:whats_app/binding/binding.dart';
+import 'package:whats_app/feature/authentication/backend/call_repo/call_repo.dart';
 
 class Message {
   final String toId;
