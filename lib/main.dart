@@ -14,11 +14,10 @@ import 'package:whats_app/my_apps.dart';
 import 'data/repository/authentication_repo/AuthenticationRepo.dart';
 
 @pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  debugPrint('FCM background: ${message.data}');
-}
-
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+//   debugPrint('FCM background: ${message.data}');
+// }
 final navigatorKey = GlobalKey<NavigatorState>();
 StreamSubscription<User?>? _authSub;
 
@@ -33,7 +32,7 @@ Future<void> main() async {
   Get.put(AppLifecycleService(), permanent: true);
 
   // background handler
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   // notification service
   await NotificationService.instance.initLocalNotifications();

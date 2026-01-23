@@ -1,27 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
+import 'package:whats_app/feature/Chatting_screen/widget/callPage.dart';
 import 'package:whats_app/feature/authentication/backend/call_repo/timeFormate.dart';
 
-enum MessageType { text, image, call }
+class callRepo extends GetxController {
+  static callRepo get instance => Get.find();
 
-enum AppCallType { audio, video }
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-enum AppCallStatus { ringing, answered, ended, missed, rejected, canceled }
-
-class CallRepo {
-  static final FirebaseFirestore _db = FirebaseFirestore.instance;
-
-  static String conversationId(String a, String b) {
+  String conversationId(String a, String b) {
     final list = [a, b]..sort();
     return "${list[0]}_${list[1]}";
   }
 
-  static String? _safe(String? v) {
+  String? _safe(String? v) {
     if (v == null) return null;
     final s = v.trim();
     return s.isEmpty ? null : s;
   }
 
-  static Future<void> upsertCall({
+  Future<void> upsertCall({
     required String callId,
     required String callerId,
     required String receiverId,
@@ -78,42 +76,6 @@ class CallRepo {
       if (rp != null) data["receiverPhone"] = rp;
 
       tx.set(doc, data, SetOptions(merge: true));
-    });
-  }
-
-  static Future<void> saveCallMessage({
-    required String conversationId,
-    required String fromId,
-    required String toId,
-    required AppCallType callType,
-    required AppCallStatus status,
-    required int timeMs,
-    required int durationSec,
-    required String callId,
-  }) async {
-    final ref = _db
-        .collection("chats")
-        .doc(conversationId)
-        .collection("messages")
-        .doc();
-
-    await ref.set({
-      "id": ref.id,
-      "type": "call",
-
-      "callType": callType.name,
-      "callStatus": status.name,
-      "callId": callId,
-
-      "fromId": fromId,
-      "toId": toId,
-
-      "sent": timeMs,
-      "sentText": CallFormat.timeFromMillis(timeMs),
-
-      "durationSec": durationSec,
-      "message": callType == AppCallType.audio ? "Audio call" : "Video call",
-      "read": "",
     });
   }
 }

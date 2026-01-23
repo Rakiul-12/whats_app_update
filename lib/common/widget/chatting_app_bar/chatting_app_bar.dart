@@ -1,14 +1,10 @@
-import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
+import 'package:whats_app/common/widget/ZegoCallBtn/ZegoCallBtn.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/image.dart';
-import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
-import 'package:zego_uikit/zego_uikit.dart';
-import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ChatAppBar({
@@ -37,42 +33,19 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => Size.fromHeight(height);
 
-  static String conversationId(String a, String b) {
-    final list = [a, b]..sort();
-    return "${list[0]}_${list[1]}";
-  }
-
   @override
   Widget build(BuildContext context) {
     final bool isDark = MyHelperFunction.isDarkMode(context);
 
-    final me = FirebaseAuth.instance.currentUser!;
-    final myId = me.uid;
-
-    // ZEGO invitee
-    final invitees = [
-      ZegoUIKitUser(id: otherUser.id, name: otherUser.username),
-    ];
-
-    final convId = conversationId(myId, otherUser.id);
-
-    String newCallId() =>
-        "call_${myId}_${DateTime.now().millisecondsSinceEpoch}";
-
-    String customData(String callType) => jsonEncode({
-      "conversationId": convId,
-      "fromId": myId,
-      "toId": otherUser.id,
-      "callType": callType, // audio | video
-    });
-
     return AppBar(
+      toolbarHeight: height,
       backgroundColor: isDark ? Mycolors.dark : Mycolors.light,
       foregroundColor: isDark ? Mycolors.light : Mycolors.dark,
       elevation: 0,
       automaticallyImplyLeading: false,
       titleSpacing: 0,
-      leadingWidth: 35,
+      leadingWidth: 45,
+
       leading: IconButton(
         icon: Icon(
           Icons.arrow_back,
@@ -80,6 +53,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         onPressed: onBack ?? () => Navigator.pop(context),
       ),
+
       title: Row(
         children: [
           GestureDetector(
@@ -145,40 +119,29 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
 
       actions: [
-        // VIDEO CALL
+        //  VIDEO CALL
         SizedBox(
-          width: 70,
-          height: 70,
-          child: ZegoSendCallInvitationButton(
-            resourceID: "ZegoCall",
-            isVideoCall: true,
-            invitees: invitees,
-            callID: newCallId(),
-            customData: customData("video"),
-            icon: ButtonIcon(
-              icon: Icon(
-                Icons.videocam,
-                color: isDark ? Mycolors.light : Mycolors.textPrimary,
-              ),
+          width: 40,
+          height: 40,
+          child: Center(
+            child: ZegoCallInvitationButton(
+              otherUser: otherUser,
+              isVideo: true,
+              icon: Icons.videocam,
             ),
           ),
         ),
 
-        // AUDIO CALL
+        SizedBox(width: 6),
+        //  AUDIO CALL
         SizedBox(
-          height: 70,
-          width: 70,
-          child: ZegoSendCallInvitationButton(
-            resourceID: "ZegoCall",
-            isVideoCall: false,
-            invitees: invitees,
-            callID: newCallId(),
-            customData: customData("audio"),
-            icon: ButtonIcon(
-              icon: Icon(
-                Icons.call,
-                color: isDark ? Mycolors.light : Mycolors.textPrimary,
-              ),
+          width: 40,
+          height: 40,
+          child: Center(
+            child: ZegoCallInvitationButton(
+              otherUser: otherUser,
+              isVideo: false,
+              icon: Icons.call,
             ),
           ),
         ),

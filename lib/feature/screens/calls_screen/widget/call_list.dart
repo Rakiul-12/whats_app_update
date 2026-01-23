@@ -24,14 +24,14 @@ class Calls_list extends StatelessWidget {
         }
 
         if (!snap.hasData || snap.data!.docs.isEmpty) {
-          return const Center(child: Text("No calls yet"));
+          return const Center(child: Text("No calls yet..."));
         }
 
         final docs = snap.data!.docs;
 
         return ListView.separated(
           itemCount: docs.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
+          separatorBuilder: (_, __) => SizedBox(height: 10),
           itemBuilder: (context, index) {
             final d = docs[index].data();
 
@@ -71,11 +71,12 @@ class Calls_list extends StatelessWidget {
                   otherName.isNotEmpty ? otherName[0].toUpperCase() : "?",
                 ),
               ),
+
               title: Text(
                 otherName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700),
+                style: TextStyle(fontWeight: FontWeight.w700),
               ),
               subtitle: Row(
                 children: [

@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:whats_app/feature/authentication/backend/call_repo/timeFormate.dart';
 
-/// ✅ rename enums to avoid conflicts
 enum AppCallType { audio, video }
 
 enum AppCallStatus { ringing, answered, ended, missed, rejected, canceled }
@@ -43,7 +42,7 @@ class CallRepo {
       final data = <String, dynamic>{
         "callId": callId,
         "callerId": callerId,
-        "receiverId": receiverId,
+        "receiverId": receiverName,
 
         "participants": [callerId, receiverId],
 
@@ -81,40 +80,35 @@ class CallRepo {
     });
   }
 
-  static Future<void> saveCallMessage({
-    required String conversationId,
-    required String fromId,
-    required String toId,
-    required AppCallType callType,
-    required AppCallStatus status,
-    required int timeMs,
-    required int durationSec,
-    required String callId,
-  }) async {
-    final ref = _db
-        .collection("chats")
-        .doc(conversationId)
-        .collection("messages")
-        .doc();
+  // static Future<void> saveCallMessage({
+  //   required String conversationId,
+  //   required String fromId,
+  //   required String toId,
+  //   required AppCallType callType,
+  //   required AppCallStatus status,
+  //   required int timeMs,
+  //   required int durationSec,
+  //   required String callId,
+  // }) async {
+  //   final ref = _db
+  //       .collection("chats")
+  //       .doc(conversationId)
+  //       .collection("messages")
+  //       .doc();
 
-    await ref.set({
-      "id": ref.id,
-      "type": "call",
-
-      "callType": callType.name,
-      "callStatus": status.name,
-      "callId": callId,
-
-      "fromId": fromId,
-      "toId": toId,
-
-      // ✅ save as int + text
-      "sent": timeMs,
-      "sentText": CallFormat.timeFromMillis(timeMs),
-
-      "durationSec": durationSec,
-      "message": callType == AppCallType.audio ? "Audio call" : "Video call",
-      "read": "",
-    });
-  }
+  //   await ref.set({
+  //     "id": ref.id,
+  //     "type": "call",
+  //     "callType": callType.name,
+  //     "callStatus": status.name,
+  //     "callId": callId,
+  //     "fromId": fromId,
+  //     "toId": toId,
+  //     "sent": timeMs,
+  //     "sentText": CallFormat.timeFromMillis(timeMs),
+  //     "durationSec": durationSec,
+  //     "message": callType == AppCallType.audio ? "Audio call" : "Video call",
+  //     "read": "",
+  //   });
+  // }
 }
