@@ -76,8 +76,13 @@ class ZegoService {
                   ? enums.AppCallType.video
                   : enums.AppCallType.audio;
 
-              final receiverName = (data["toName"] ?? "").toString().trim();
-              final receiverPhone = (data["toPhone"] ?? "").toString().trim();
+              final fromName = (data["fromName"] ?? _myName).toString().trim();
+              final fromPhone = (data["fromPhone"] ?? _myPhone)
+                  .toString()
+                  .trim();
+
+              final toName = (data["toName"] ?? "").toString().trim();
+              final toPhone = (data["toPhone"] ?? "").toString().trim();
 
               await repo.CallRepo.instance.upsertCall(
                 callId: callID,
@@ -85,10 +90,10 @@ class ZegoService {
                 receiverId: toId,
                 callType: ct,
                 status: enums.AppCallStatus.ringing,
-                callerName: _myName,
-                callerPhone: _myPhone,
-                receiverName: receiverName.isEmpty ? null : receiverName,
-                receiverPhone: receiverPhone.isEmpty ? null : receiverPhone,
+                callerName: fromName.isEmpty ? null : fromName,
+                callerPhone: fromPhone.isEmpty ? null : fromPhone,
+                receiverName: toName.isEmpty ? null : toName,
+                receiverPhone: toPhone.isEmpty ? null : toPhone,
               );
             },
 
@@ -105,8 +110,11 @@ class ZegoService {
               ? enums.AppCallType.video
               : enums.AppCallType.audio;
 
-          final receiverName = (data["toName"] ?? "").toString().trim();
-          final receiverPhone = (data["toPhone"] ?? "").toString().trim();
+          final fromName = (data["fromName"] ?? _myName).toString().trim();
+          final fromPhone = (data["fromPhone"] ?? _myPhone).toString().trim();
+
+          final toName = (data["toName"] ?? "").toString().trim();
+          final toPhone = (data["toPhone"] ?? "").toString().trim();
 
           await repo.CallRepo.instance.upsertCall(
             callId: callID,
@@ -116,10 +124,10 @@ class ZegoService {
             status: enums.AppCallStatus.missed,
             endedAt: now,
             durationSec: 0,
-            callerName: _myName,
-            callerPhone: _myPhone,
-            receiverName: receiverName.isEmpty ? null : receiverName,
-            receiverPhone: receiverPhone.isEmpty ? null : receiverPhone,
+            callerName: fromName.isEmpty ? null : fromName,
+            callerPhone: fromPhone.isEmpty ? null : fromPhone,
+            receiverName: toName.isEmpty ? null : toName,
+            receiverPhone: toPhone.isEmpty ? null : toPhone,
           );
         },
 
@@ -138,9 +146,11 @@ class ZegoService {
           final enums.AppCallType ct = isVideo
               ? enums.AppCallType.video
               : enums.AppCallType.audio;
+          final fromName = (data["fromName"] ?? _myName).toString().trim();
+          final fromPhone = (data["fromPhone"] ?? _myPhone).toString().trim();
 
-          final receiverName = (data["toName"] ?? "").toString().trim();
-          final receiverPhone = (data["toPhone"] ?? "").toString().trim();
+          final toName = (data["toName"] ?? "").toString().trim();
+          final toPhone = (data["toPhone"] ?? "").toString().trim();
 
           await repo.CallRepo.instance.upsertCall(
             callId: callID,
@@ -150,10 +160,40 @@ class ZegoService {
             status: enums.AppCallStatus.canceled,
             endedAt: now,
             durationSec: 0,
-            callerName: _myName,
-            callerPhone: _myPhone,
-            receiverName: receiverName.isEmpty ? null : receiverName,
-            receiverPhone: receiverPhone.isEmpty ? null : receiverPhone,
+            callerName: fromName.isEmpty ? null : fromName,
+            callerPhone: fromPhone.isEmpty ? null : fromPhone,
+            receiverName: toName.isEmpty ? null : toName,
+            receiverPhone: toPhone.isEmpty ? null : toPhone,
+          );
+        },
+
+        onIncomingCallCanceled: (callID, caller, customData) async {
+          final now = DateTime.now().millisecondsSinceEpoch;
+
+          final data = _safeDecode(customData) ?? {};
+          _callData[callID] = data;
+
+          final fromId = (data["fromId"] ?? caller.id).toString().trim();
+          final fromName = (data["fromName"] ?? caller.name).toString().trim();
+          final fromPhone = (data["fromPhone"] ?? "").toString().trim();
+
+          final isVideo =
+              (data["callType"]?.toString().toLowerCase() == "video");
+          final enums.AppCallType ct = isVideo
+              ? enums.AppCallType.video
+              : enums.AppCallType.audio;
+          await repo.CallRepo.instance.upsertCall(
+            callId: callID,
+            callerId: fromId,
+            receiverId: _myId,
+            callType: ct,
+            status: enums.AppCallStatus.canceled,
+            endedAt: now,
+            durationSec: 0,
+            callerName: fromName.isEmpty ? null : fromName,
+            callerPhone: fromPhone.isEmpty ? null : fromPhone,
+            receiverName: _myName,
+            receiverPhone: _myPhone.isEmpty ? null : _myPhone,
           );
         },
       ),

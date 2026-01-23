@@ -64,7 +64,6 @@ class CallRepo extends GetxController {
       final cp = _safe(callerPhone);
       final rn = _safe(receiverName);
       final rp = _safe(receiverPhone);
-
       if (cn != null) data["callerName"] = cn;
       if (cp != null) data["callerPhone"] = cp;
       if (rn != null) data["receiverName"] = rn;

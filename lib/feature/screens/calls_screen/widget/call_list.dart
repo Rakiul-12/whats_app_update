@@ -13,18 +13,18 @@ class Calls_list extends StatelessWidget {
     final stream = FirebaseFirestore.instance
         .collection("calls")
         .where("participants", arrayContains: myId)
-        .orderBy("createdAt", descending: true)
+        .orderBy("callId", descending: true)
         .snapshots();
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: CircularProgressIndicator());
         }
 
         if (!snap.hasData || snap.data!.docs.isEmpty) {
-          return const Center(child: Text("No calls yet..."));
+          return Center(child: Text("No calls yet..."));
         }
 
         final docs = snap.data!.docs;
@@ -39,9 +39,12 @@ class Calls_list extends StatelessWidget {
             final receiverId = (d["receiverId"] ?? "").toString();
             final isOutgoing = callerId == myId;
 
-            final otherName = isOutgoing
-                ? _safeText(d["receiverName"], receiverId)
-                : _safeText(d["callerName"], callerId);
+            final otherId = isOutgoing ? receiverId : callerId;
+
+            // try Firestore name fields first
+            final otherNameFromCall = isOutgoing
+                ? _safeText(d["receiverName"])
+                : _safeText(d["callerName"]);
 
             final status = (d["status"] ?? "").toString().toLowerCase();
             final callType = (d["callType"] ?? "audio")
@@ -61,42 +64,47 @@ class Calls_list extends StatelessWidget {
 
             final timeMs = d["endedAt"] ?? d["createdAt"] ?? d["updatedAt"];
             final timeText = CallFormat.whatsappTime(timeMs);
-
             final subtitle = "${_statusText(status)} • $timeText";
 
-            return ListTile(
-              leading: CircleAvatar(
-                radius: 24,
-                child: Text(
-                  otherName.isNotEmpty ? otherName[0].toUpperCase() : "?",
-                ),
-              ),
+            return FutureBuilder<String>(
+              future: _resolveName(otherNameFromCall, otherId),
+              builder: (context, nameSnap) {
+                final otherName = (nameSnap.data ?? otherId).trim();
 
-              title: Text(
-                otherName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-              subtitle: Row(
-                children: [
-                  Icon(directionIcon, size: 16, color: directionColor),
-                  SizedBox(width: 6),
-                  Expanded(
+                return ListTile(
+                  leading: CircleAvatar(
+                    radius: 24,
                     child: Text(
-                      subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      otherName.isNotEmpty ? otherName[0].toUpperCase() : "?",
                     ),
                   ),
-                ],
-              ),
-              trailing: Icon(
-                isVideo ? Icons.videocam : Icons.call,
-                color: (isMissed || isRejected)
-                    ? Colors.redAccent
-                    : Colors.green,
-              ),
+                  title: Text(
+                    otherName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Row(
+                    children: [
+                      Icon(directionIcon, size: 16, color: directionColor),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  trailing: Icon(
+                    isVideo ? Icons.videocam : Icons.call,
+                    color: (isMissed || isRejected)
+                        ? Colors.redAccent
+                        : Colors.green,
+                  ),
+                );
+              },
             );
           },
         );
@@ -104,9 +112,25 @@ class Calls_list extends StatelessWidget {
     );
   }
 
-  String _safeText(dynamic v, String fallback) {
+  Future<String> _resolveName(String nameFromCall, String uid) async {
+    if (nameFromCall.trim().isNotEmpty) return nameFromCall.trim();
+    if (uid.trim().isEmpty) return "";
+
+    final userDoc = await FirebaseFirestore.instance
+        .collection("users")
+        .doc(uid)
+        .get();
+
+    final data = userDoc.data();
+    final username = (data?["username"] ?? data?["name"] ?? "")
+        .toString()
+        .trim();
+    return username.isNotEmpty ? username : uid;
+  }
+
+  String _safeText(dynamic v) {
     final s = (v ?? "").toString().trim();
-    return s.isEmpty ? fallback : s;
+    return s;
   }
 
   String _statusText(String status) {

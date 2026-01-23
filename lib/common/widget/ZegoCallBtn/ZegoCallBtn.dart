@@ -40,8 +40,15 @@ class ZegoCallInvitationButton extends StatelessWidget {
         "call_${myId}_${DateTime.now().millisecondsSinceEpoch}";
     String customData(String callType) => jsonEncode({
       "conversationId": convId,
+
       "fromId": myId,
+      "fromName": FirebaseAuth.instance.currentUser?.displayName ?? "Me",
+      "fromPhone": FirebaseAuth.instance.currentUser?.phoneNumber ?? "",
+
       "toId": otherUser.id,
+      "toName": otherUser.username,
+      "toPhone": otherUser.phoneNumber ?? "",
+
       "callType": callType,
     });
 
