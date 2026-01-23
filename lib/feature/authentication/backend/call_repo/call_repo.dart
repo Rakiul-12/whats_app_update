@@ -1,17 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:whats_app/feature/Chatting_screen/widget/callPage.dart';
+import 'package:whats_app/binding/enum.dart';
 import 'package:whats_app/feature/authentication/backend/call_repo/timeFormate.dart';
 
-class callRepo extends GetxController {
-  static callRepo get instance => Get.find();
+class CallRepo extends GetxController {
+  static CallRepo get instance => Get.find<CallRepo>();
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-
-  String conversationId(String a, String b) {
-    final list = [a, b]..sort();
-    return "${list[0]}_${list[1]}";
-  }
 
   String? _safe(String? v) {
     if (v == null) return null;
@@ -49,15 +44,15 @@ class callRepo extends GetxController {
         "status": status.name,
 
         "startedAt": startedAt,
-        "endedAt": endedAt,
+        // "endedAt": endedAt,
         "durationSec": durationSec ?? 0,
 
-        "updatedAt": now,
+        // "updatedAt": now,
         "updatedAtText": CallFormat.timeFromMillis(now),
       };
 
       if (!snap.exists) {
-        data["createdAt"] = now;
+        // data["createdAt"] = now;
         data["createdAtText"] = CallFormat.timeFromMillis(now);
       }
 
