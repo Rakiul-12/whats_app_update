@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:whats_app/feature/authentication/backend/call_repo/timeFormate.dart';
+import 'package:whats_app/utiles/theme/const/sizes.dart';
 
 class Calls_list extends StatelessWidget {
   const Calls_list({super.key});
@@ -13,23 +14,36 @@ class Calls_list extends StatelessWidget {
     final stream = FirebaseFirestore.instance
         .collection("calls")
         .where("participants", arrayContains: myId)
-        .orderBy("callId", descending: true)
         .snapshots();
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: stream,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snap.hasError) {
+          return Center(child: Text("Firestore error:\n${snap.error}"));
         }
 
         if (!snap.hasData || snap.data!.docs.isEmpty) {
-          return Center(child: Text("No calls yet..."));
+          return const Center(child: Text("No calls yet..."));
         }
 
-        final docs = snap.data!.docs;
+        final docs = [...snap.data!.docs];
+        docs.sort((a, b) {
+          int getTime(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+            final d = doc.data();
+            final v = d["updatedAt"] ?? d["createdAt"] ?? d["endedAt"] ?? 0;
+            return (v is int) ? v : int.tryParse(v.toString()) ?? 0;
+          }
+
+          return getTime(b).compareTo(getTime(a));
+        });
 
         return ListView.separated(
+          padding: EdgeInsets.symmetric(vertical: 5),
           itemCount: docs.length,
           separatorBuilder: (_, __) => SizedBox(height: 10),
           itemBuilder: (context, index) {
@@ -39,12 +53,9 @@ class Calls_list extends StatelessWidget {
             final receiverId = (d["receiverId"] ?? "").toString();
             final isOutgoing = callerId == myId;
 
-            final otherId = isOutgoing ? receiverId : callerId;
-
-            // try Firestore name fields first
-            final otherNameFromCall = isOutgoing
-                ? _safeText(d["receiverName"])
-                : _safeText(d["callerName"]);
+            final otherName = isOutgoing
+                ? _safeText(d["receiverName"], receiverId)
+                : _safeText(d["callerName"], callerId);
 
             final status = (d["status"] ?? "").toString().toLowerCase();
             final callType = (d["callType"] ?? "audio")
@@ -66,45 +77,45 @@ class Calls_list extends StatelessWidget {
             final timeText = CallFormat.whatsappTime(timeMs);
             final subtitle = "${_statusText(status)} • $timeText";
 
-            return FutureBuilder<String>(
-              future: _resolveName(otherNameFromCall, otherId),
-              builder: (context, nameSnap) {
-                final otherName = (nameSnap.data ?? otherId).trim();
-
-                return ListTile(
-                  leading: CircleAvatar(
-                    radius: 24,
-                    child: Text(
-                      otherName.isNotEmpty ? otherName[0].toUpperCase() : "?",
-                    ),
+            return GestureDetector(
+              onTap: () {},
+              child: ListTile(
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 2,
+                ),
+                leading: CircleAvatar(
+                  radius: 24,
+                  child: Text(
+                    otherName.isNotEmpty ? otherName[0].toUpperCase() : "?",
                   ),
-                  title: Text(
-                    otherName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  subtitle: Row(
-                    children: [
-                      Icon(directionIcon, size: 16, color: directionColor),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                ),
+                title: Text(
+                  otherName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Row(
+                  children: [
+                    Icon(directionIcon, size: 16, color: directionColor),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
-                  trailing: Icon(
-                    isVideo ? Icons.videocam : Icons.call,
-                    color: (isMissed || isRejected)
-                        ? Colors.redAccent
-                        : Colors.green,
-                  ),
-                );
-              },
+                    ),
+                  ],
+                ),
+                trailing: Icon(
+                  isVideo ? Icons.videocam : Icons.call,
+                  color: (isMissed || isRejected)
+                      ? Colors.redAccent
+                      : Colors.green,
+                ),
+              ),
             );
           },
         );
@@ -112,25 +123,9 @@ class Calls_list extends StatelessWidget {
     );
   }
 
-  Future<String> _resolveName(String nameFromCall, String uid) async {
-    if (nameFromCall.trim().isNotEmpty) return nameFromCall.trim();
-    if (uid.trim().isEmpty) return "";
-
-    final userDoc = await FirebaseFirestore.instance
-        .collection("users")
-        .doc(uid)
-        .get();
-
-    final data = userDoc.data();
-    final username = (data?["username"] ?? data?["name"] ?? "")
-        .toString()
-        .trim();
-    return username.isNotEmpty ? username : uid;
-  }
-
-  String _safeText(dynamic v) {
+  String _safeText(dynamic v, String fallback) {
     final s = (v ?? "").toString().trim();
-    return s;
+    return s.isEmpty ? fallback : s;
   }
 
   String _statusText(String status) {

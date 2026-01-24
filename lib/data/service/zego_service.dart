@@ -69,10 +69,8 @@ class ZegoService {
                       .toString()
                       .trim();
 
-              final bool isVideo =
-                  (data["callType"]?.toString().toLowerCase() == "video");
-
-              final enums.AppCallType ct = isVideo
+              final enums.AppCallType ct =
+                  (zegoCallType == ZegoCallType.videoCall)
                   ? enums.AppCallType.video
                   : enums.AppCallType.audio;
 
@@ -80,7 +78,6 @@ class ZegoService {
               final fromPhone = (data["fromPhone"] ?? _myPhone)
                   .toString()
                   .trim();
-
               final toName = (data["toName"] ?? "").toString().trim();
               final toPhone = (data["toPhone"] ?? "").toString().trim();
 
@@ -112,7 +109,6 @@ class ZegoService {
 
           final fromName = (data["fromName"] ?? _myName).toString().trim();
           final fromPhone = (data["fromPhone"] ?? _myPhone).toString().trim();
-
           final toName = (data["toName"] ?? "").toString().trim();
           final toPhone = (data["toPhone"] ?? "").toString().trim();
 

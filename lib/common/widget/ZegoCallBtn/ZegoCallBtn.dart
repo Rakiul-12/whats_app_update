@@ -13,11 +13,13 @@ class ZegoCallInvitationButton extends StatelessWidget {
     required this.otherUser,
     required this.isVideo,
     required this.icon,
+    required this.text,
   });
 
   final UserModel otherUser;
   bool isVideo = true;
   IconData icon;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
@@ -57,9 +59,9 @@ class ZegoCallInvitationButton extends StatelessWidget {
       isVideoCall: isVideo,
       invitees: invitees,
       callID: newCallId(),
-      customData: customData("video"),
-      buttonSize: const Size(40, 40),
-      iconSize: const Size(22, 22),
+      customData: customData(text),
+      buttonSize: Size(40, 40),
+      iconSize: Size(22, 22),
       icon: ButtonIcon(
         icon: Icon(
           icon,

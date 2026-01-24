@@ -47,14 +47,19 @@ class CallRepo extends GetxController {
         // "endedAt": endedAt,
         "durationSec": durationSec ?? 0,
 
-        // "updatedAt": now,
+        "updatedAt": now,
         "updatedAtText": CallFormat.timeFromMillis(now),
       };
 
       if (!snap.exists) {
-        // data["createdAt"] = now;
-        data["createdAtText"] = CallFormat.timeFromMillis(now);
+        data["createdAt"] = now;
+      } else if (!snap.data()!.containsKey("createdAt")) {
+        data["createdAt"] = now;
       }
+
+      data["createdAtText"] = CallFormat.timeFromMillis(
+        data["createdAt"] ?? now,
+      );
 
       if (endedAt != null) {
         data["endedAtText"] = CallFormat.timeFromMillis(endedAt);

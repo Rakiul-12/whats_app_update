@@ -6,7 +6,6 @@ import 'package:whats_app/binding/enum.dart';
 import 'package:whats_app/data/service/cloudinary_service_for_chat.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
 import 'package:whats_app/feature/authentication/backend/MessageRepo/MessageRepository.dart';
-import 'package:whats_app/feature/authentication/backend/call_repo/call_repo.dart';
 import 'package:whats_app/utiles/const/keys.dart';
 import 'package:dio/dio.dart' as dio;
 

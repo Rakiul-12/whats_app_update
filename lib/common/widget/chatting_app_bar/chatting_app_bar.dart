@@ -23,11 +23,9 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? subtitle;
   final ImageProvider? avatarImage;
   final UserModel otherUser;
-
   final VoidCallback? onBack;
   final VoidCallback? onProfileTap;
   final VoidCallback? onMore;
-
   final double height;
 
   @override
@@ -64,7 +62,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                   avatarImage ?? const AssetImage(MyImage.onProfileScreen),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,9 +103,9 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                               ),
                           blankSpace: 30,
                           velocity: 20,
-                          pauseAfterRound: const Duration(seconds: 2),
+                          pauseAfterRound: Duration(seconds: 2),
                           numberOfRounds: 2,
-                          startAfter: const Duration(milliseconds: 300),
+                          startAfter: Duration(milliseconds: 300),
                         ),
                       );
                     },
@@ -128,6 +126,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
               otherUser: otherUser,
               isVideo: true,
               icon: Icons.videocam,
+              text: 'video',
             ),
           ),
         ),
@@ -142,6 +141,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
               otherUser: otherUser,
               isVideo: false,
               icon: Icons.call,
+              text: 'audio',
             ),
           ),
         ),

@@ -10,8 +10,6 @@ import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
 void showUesrDialog(context, UserModel user) {
-  // final UserModel otherUser;
-
   final isDark = MyHelperFunction.isDarkMode(context);
   showDialog<void>(
     context: context,
@@ -55,7 +53,11 @@ void showUesrDialog(context, UserModel user) {
                     Get.off(() => ChattingScreen(), arguments: user),
                 icon: Icon(Iconsax.message, color: Mycolors.buttonPrimary),
               ),
-
+              // ZegoCallInvitationButton(
+              //   otherUser: otherUser,
+              //   isVideo: true,
+              //   icon: Icons.videocam,
+              // ),
               IconButton(
                 onPressed: () {},
                 icon: Icon(Iconsax.call, color: Mycolors.buttonPrimary),

@@ -79,9 +79,9 @@ class call_screen extends StatelessWidget {
             SizedBox(height: Mysize.spaceBtwSections),
 
             // heading
-            const MySectionHeading(title: "Recent", showActionBtn: false),
-            SizedBox(height: Mysize.spaceBtwItems),
+            MySectionHeading(title: "Recent", showActionBtn: false),
 
+            SizedBox(height: Mysize.spaceBtwItems),
             Expanded(child: Calls_list()),
           ],
         ),
