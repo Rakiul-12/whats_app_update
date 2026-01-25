@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:whats_app/common/widget/ZegoCallBtn/ZegoCallBtn.dart';
+import 'package:whats_app/common/widget/style/screen_padding.dart';
+import 'package:whats_app/feature/authentication/Model/UserModel.dart';
 import 'package:whats_app/feature/authentication/backend/call_repo/timeFormate.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 
@@ -20,7 +23,7 @@ class Calls_list extends StatelessWidget {
       stream: stream,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: CircularProgressIndicator());
         }
 
         if (snap.hasError) {
@@ -28,7 +31,7 @@ class Calls_list extends StatelessWidget {
         }
 
         if (!snap.hasData || snap.data!.docs.isEmpty) {
-          return const Center(child: Text("No calls yet..."));
+          return Center(child: Text("No calls yet..."));
         }
 
         final docs = [...snap.data!.docs];
@@ -77,49 +80,127 @@ class Calls_list extends StatelessWidget {
             final timeText = CallFormat.whatsappTime(timeMs);
             final subtitle = "${_statusText(status)} • $timeText";
 
-            return GestureDetector(
-              onTap: () {},
-              child: ListTile(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 2,
-                ),
-                leading: CircleAvatar(
-                  radius: 24,
-                  child: Text(
-                    otherName.isNotEmpty ? otherName[0].toUpperCase() : "?",
-                  ),
-                ),
-                title: Text(
-                  otherName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                subtitle: Row(
-                  children: [
-                    Icon(directionIcon, size: 16, color: directionColor),
-                    SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 15,
+                vertical: 4,
+              ),
+
+              onTap: () {
+                final user = _userFromCall(d, isOutgoing);
+                showModalBottomSheet(
+                  context: context,
+                  useSafeArea: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
                     ),
-                  ],
+                  ),
+                  builder: (_) {
+                    return Padding(
+                      padding: MyPadding.screenPadding,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // AUDIO CALL
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: ZegoCallInvitationButton(
+                              otherUser: user,
+                              isVideo: false,
+                              icon: Icons.call,
+                              text: "audio",
+                              size: 20,
+                            ),
+                            title: Text(
+                              "Audio call",
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: Text("Call using voice"),
+                          ),
+
+                          SizedBox(height: 10),
+
+                          // VIDEO CALL
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: ZegoCallInvitationButton(
+                              otherUser: user,
+                              isVideo: true,
+                              icon: Icons.videocam,
+                              text: "video",
+                              size: 20,
+                            ),
+                            title: Text(
+                              "Video call",
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: Text("Call with video"),
+                          ),
+
+                          SizedBox(height: 10),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+
+              leading: CircleAvatar(
+                radius: 24,
+                child: Text(
+                  otherName.isNotEmpty ? otherName[0].toUpperCase() : "?",
                 ),
-                trailing: Icon(
-                  isVideo ? Icons.videocam : Icons.call,
-                  color: (isMissed || isRejected)
-                      ? Colors.redAccent
-                      : Colors.green,
-                ),
+              ),
+
+              title: Text(
+                otherName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+
+              subtitle: Row(
+                children: [
+                  Icon(directionIcon, size: 16, color: directionColor),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+
+              trailing: Icon(
+                isVideo ? Icons.videocam : Icons.call,
+                color: (isMissed || isRejected)
+                    ? Colors.redAccent
+                    : Colors.green,
               ),
             );
           },
         );
       },
+    );
+  }
+
+  UserModel _userFromCall(Map<String, dynamic> d, bool isOutgoing) {
+    return UserModel(
+      id: isOutgoing ? d["receiverId"] : d["callerId"],
+      username: isOutgoing
+          ? (d["receiverName"] ?? "User")
+          : (d["callerName"] ?? "User"),
+      phoneNumber: isOutgoing ? d["receiverPhone"] : d["callerPhone"],
+      profilePicture: "",
+      email: '',
+      about: '',
+      createdAt: '',
+      isOnline: true,
+      pushToken: '',
+      lastActive: '',
     );
   }
 

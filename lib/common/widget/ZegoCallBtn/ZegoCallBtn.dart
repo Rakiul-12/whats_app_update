@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
-import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 import 'package:zego_uikit/zego_uikit.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
@@ -14,13 +13,16 @@ class ZegoCallInvitationButton extends StatelessWidget {
     required this.isVideo,
     required this.icon,
     required this.text,
+    this.color,
+    this.size = 22,
   });
 
   final UserModel otherUser;
   bool isVideo = true;
   IconData icon;
   final String text;
-
+  final Color? color;
+  final double? size;
   @override
   Widget build(BuildContext context) {
     final bool isDark = MyHelperFunction.isDarkMode(context);
@@ -63,11 +65,7 @@ class ZegoCallInvitationButton extends StatelessWidget {
       buttonSize: Size(40, 40),
       iconSize: Size(22, 22),
       icon: ButtonIcon(
-        icon: Icon(
-          icon,
-          size: 22,
-          color: isDark ? Mycolors.light : Mycolors.textPrimary,
-        ),
+        icon: Icon(icon, size: size, color: color),
       ),
     );
   }

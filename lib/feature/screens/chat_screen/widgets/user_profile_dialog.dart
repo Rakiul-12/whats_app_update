@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:whats_app/common/widget/ZegoCallBtn/ZegoCallBtn.dart';
 import 'package:whats_app/feature/Chatting_screen/chatting_screen.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
@@ -53,14 +54,21 @@ void showUesrDialog(context, UserModel user) {
                     Get.off(() => ChattingScreen(), arguments: user),
                 icon: Icon(Iconsax.message, color: Mycolors.buttonPrimary),
               ),
-              // ZegoCallInvitationButton(
-              //   otherUser: otherUser,
-              //   isVideo: true,
-              //   icon: Icons.videocam,
-              // ),
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Iconsax.call, color: Mycolors.buttonPrimary),
+              ZegoCallInvitationButton(
+                otherUser: user,
+                isVideo: true,
+                icon: Iconsax.video,
+                text: 'video',
+                color: Mycolors.buttonPrimary,
+                size: 20,
+              ),
+              ZegoCallInvitationButton(
+                otherUser: user,
+                isVideo: false,
+                icon: Iconsax.call,
+                text: 'audio',
+                color: Mycolors.buttonPrimary,
+                size: 20,
               ),
               IconButton(
                 onPressed: () {},
