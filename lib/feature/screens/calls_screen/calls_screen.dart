@@ -44,13 +44,13 @@ class call_screen extends StatelessWidget {
         ],
       ),
 
-      body: Padding(
-        padding: MyPadding.screenPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // top buttons
-            Row(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // top buttons
+          Padding(
+            padding: MyPadding.screenPadding,
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Custom_circualar_icon_and_text(
@@ -75,16 +75,19 @@ class call_screen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
 
-            SizedBox(height: Mysize.spaceBtwSections),
+          SizedBox(height: Mysize.spaceBtwSections),
 
-            // heading
-            MySectionHeading(title: "Recent", showActionBtn: false),
+          // heading
+          Padding(
+            padding: const EdgeInsets.only(left: 25),
+            child: MySectionHeading(title: "Recent", showActionBtn: false),
+          ),
 
-            SizedBox(height: Mysize.spaceBtwItems),
-            Expanded(child: Calls_list()),
-          ],
-        ),
+          SizedBox(height: Mysize.spaceBtwItems),
+          Expanded(child: Calls_list()),
+        ],
       ),
     );
   }

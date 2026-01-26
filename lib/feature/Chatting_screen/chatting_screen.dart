@@ -29,7 +29,6 @@ class ChattingScreen extends StatelessWidget {
     // Messages stream for this chat
     final allMessage = Messagerepository.GetAllMessage(otherUser);
 
-    //  user's live status (online + lastActive)
     final userStream = FirebaseFirestore.instance
         .collection('users')
         .doc(otherUser.id)
