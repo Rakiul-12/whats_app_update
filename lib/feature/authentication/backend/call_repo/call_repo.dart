@@ -44,7 +44,7 @@ class CallRepo extends GetxController {
         "status": status.name,
 
         "startedAt": startedAt,
-        // "endedAt": endedAt,
+        "endedAt": endedAt,
         "durationSec": durationSec ?? 0,
 
         "updatedAt": now,
@@ -53,13 +53,11 @@ class CallRepo extends GetxController {
 
       if (!snap.exists) {
         data["createdAt"] = now;
-      } else if (!snap.data()!.containsKey("createdAt")) {
+      } else if (!(snap.data() ?? {}).containsKey("createdAt")) {
         data["createdAt"] = now;
       }
 
-      data["createdAtText"] = CallFormat.timeFromMillis(
-        data["createdAt"] ?? now,
-      );
+      data["createdAtText"] = CallFormat.timeFromMillis(data["createdAt"]);
 
       if (endedAt != null) {
         data["endedAtText"] = CallFormat.timeFromMillis(endedAt);
@@ -69,12 +67,51 @@ class CallRepo extends GetxController {
       final cp = _safe(callerPhone);
       final rn = _safe(receiverName);
       final rp = _safe(receiverPhone);
+
       if (cn != null) data["callerName"] = cn;
       if (cp != null) data["callerPhone"] = cp;
       if (rn != null) data["receiverName"] = rn;
       if (rp != null) data["receiverPhone"] = rp;
 
       tx.set(doc, data, SetOptions(merge: true));
+    });
+  }
+
+  ///  SAVE CALL AS CHAT MESSAGE FOR CHATTING SCREEN
+  Future<void> saveCallMessage({
+    required String conversationId,
+    required String fromId,
+    required String toId,
+    required AppCallType callType,
+    required AppCallStatus status,
+    required int timeMs,
+    required int durationSec,
+    required String callId,
+  }) async {
+    final ref = _db
+        .collection("chats")
+        .doc(conversationId)
+        .collection("messages")
+        .doc();
+
+    await ref.set({
+      "id": ref.id,
+      "type": "call",
+
+      "callType": callType.name,
+      "callStatus": status.name,
+      "callId": callId,
+      "durationSec": durationSec,
+
+      "fromId": fromId,
+      "toId": toId,
+
+      "sent": timeMs,
+      "sentText": CallFormat.timeFromMillis(timeMs),
+
+      "message": callType == AppCallType.audio ? "Voice call" : "Video call",
+
+      "read": "",
     });
   }
 }

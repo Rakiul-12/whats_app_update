@@ -17,6 +17,7 @@ class ZegoService {
   late String _myPhone;
 
   String? _lastOutgoingCallId;
+
   final Map<String, Map<String, dynamic>> _callData = {};
 
   Future<void> init({
@@ -57,11 +58,17 @@ class ZegoService {
       userName: _myName,
       plugins: [ZegoUIKitSignalingPlugin()],
       invitationEvents: ZegoUIKitPrebuiltCallInvitationEvents(
+        //  OUTGOING SENT
         onOutgoingCallSent:
             (callID, caller, zegoCallType, callees, customData) async {
               _lastOutgoingCallId = callID;
 
               final data = _safeDecode(customData) ?? {};
+
+              data["callType"] = (zegoCallType == ZegoCallType.videoCall)
+                  ? "video"
+                  : "audio";
+
               _callData[callID] = data;
 
               final toId =
@@ -69,8 +76,9 @@ class ZegoService {
                       .toString()
                       .trim();
 
-              final enums.AppCallType ct =
-                  (zegoCallType == ZegoCallType.videoCall)
+              final convId = (data["conversationId"] ?? "").toString().trim();
+
+              final enums.AppCallType ct = (data["callType"] == "video")
                   ? enums.AppCallType.video
                   : enums.AppCallType.audio;
 
@@ -92,8 +100,22 @@ class ZegoService {
                 receiverName: toName.isEmpty ? null : toName,
                 receiverPhone: toPhone.isEmpty ? null : toPhone,
               );
+
+              if (convId.isNotEmpty && toId.isNotEmpty) {
+                await repo.CallRepo.instance.saveCallMessage(
+                  conversationId: convId,
+                  fromId: _myId,
+                  toId: toId,
+                  callType: ct,
+                  status: enums.AppCallStatus.ringing,
+                  timeMs: DateTime.now().millisecondsSinceEpoch,
+                  durationSec: 0,
+                  callId: callID,
+                );
+              }
             },
 
+        //  OUTGOING TIMEOUT
         onOutgoingCallTimeout: (callID, callees, isVideoCall) async {
           final now = DateTime.now().millisecondsSinceEpoch;
           final data = _callData[callID] ?? {};
@@ -102,6 +124,8 @@ class ZegoService {
               (data["toId"] ?? (callees.isNotEmpty ? callees.first.id : ""))
                   .toString()
                   .trim();
+
+          final convId = (data["conversationId"] ?? "").toString().trim();
 
           final enums.AppCallType ct = isVideoCall
               ? enums.AppCallType.video
@@ -125,8 +149,22 @@ class ZegoService {
             receiverName: toName.isEmpty ? null : toName,
             receiverPhone: toPhone.isEmpty ? null : toPhone,
           );
+
+          if (convId.isNotEmpty && toId.isNotEmpty) {
+            await repo.CallRepo.instance.saveCallMessage(
+              conversationId: convId,
+              fromId: _myId,
+              toId: toId,
+              callType: ct,
+              status: enums.AppCallStatus.missed,
+              timeMs: now,
+              durationSec: 0,
+              callId: callID,
+            );
+          }
         },
 
+        //  OUTGOING CANCEL BUTTON
         onOutgoingCallCancelButtonPressed: () async {
           final callID = _lastOutgoingCallId;
           if (callID == null) return;
@@ -135,16 +173,15 @@ class ZegoService {
           final data = _callData[callID] ?? {};
 
           final toId = (data["toId"] ?? "").toString().trim();
+          final convId = (data["conversationId"] ?? "").toString().trim();
 
-          final bool isVideo =
-              (data["callType"]?.toString().toLowerCase() == "video");
-
+          final bool isVideo = (data["callType"] ?? "audio") == "video";
           final enums.AppCallType ct = isVideo
               ? enums.AppCallType.video
               : enums.AppCallType.audio;
+
           final fromName = (data["fromName"] ?? _myName).toString().trim();
           final fromPhone = (data["fromPhone"] ?? _myPhone).toString().trim();
-
           final toName = (data["toName"] ?? "").toString().trim();
           final toPhone = (data["toPhone"] ?? "").toString().trim();
 
@@ -161,8 +198,22 @@ class ZegoService {
             receiverName: toName.isEmpty ? null : toName,
             receiverPhone: toPhone.isEmpty ? null : toPhone,
           );
+
+          if (convId.isNotEmpty && toId.isNotEmpty) {
+            await repo.CallRepo.instance.saveCallMessage(
+              conversationId: convId,
+              fromId: _myId,
+              toId: toId,
+              callType: ct,
+              status: enums.AppCallStatus.canceled,
+              timeMs: now,
+              durationSec: 0,
+              callId: callID,
+            );
+          }
         },
 
+        //  INCOMING CANCELED
         onIncomingCallCanceled: (callID, caller, customData) async {
           final now = DateTime.now().millisecondsSinceEpoch;
 
@@ -170,14 +221,17 @@ class ZegoService {
           _callData[callID] = data;
 
           final fromId = (data["fromId"] ?? caller.id).toString().trim();
-          final fromName = (data["fromName"] ?? caller.name).toString().trim();
-          final fromPhone = (data["fromPhone"] ?? "").toString().trim();
+          final convId = (data["conversationId"] ?? "").toString().trim();
 
           final isVideo =
               (data["callType"]?.toString().toLowerCase() == "video");
           final enums.AppCallType ct = isVideo
               ? enums.AppCallType.video
               : enums.AppCallType.audio;
+
+          final fromName = (data["fromName"] ?? caller.name).toString().trim();
+          final fromPhone = (data["fromPhone"] ?? "").toString().trim();
+
           await repo.CallRepo.instance.upsertCall(
             callId: callID,
             callerId: fromId,
@@ -191,6 +245,19 @@ class ZegoService {
             receiverName: _myName,
             receiverPhone: _myPhone.isEmpty ? null : _myPhone,
           );
+
+          if (convId.isNotEmpty && fromId.isNotEmpty) {
+            await repo.CallRepo.instance.saveCallMessage(
+              conversationId: convId,
+              fromId: fromId,
+              toId: _myId,
+              callType: ct,
+              status: enums.AppCallStatus.canceled,
+              timeMs: now,
+              durationSec: 0,
+              callId: callID,
+            );
+          }
         },
       ),
     );
