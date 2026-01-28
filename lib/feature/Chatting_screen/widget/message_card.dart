@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:whats_app/feature/authentication/backend/MessageRepo/MessageRepository.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
@@ -15,6 +15,12 @@ class MessageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isDark = MyHelperFunction.isDarkMode(context);
 
+    final String myId = FirebaseAuth.instance.currentUser!.uid;
+    final String fromId = (message['fromId'] ?? '').toString().trim();
+    final bool isSentByMe = fromId == myId;
+
+    final String type = (message['type'] ?? '').toString().trim().toLowerCase();
+
     // message text
     final String msg = (message['message'] ?? message['msg'] ?? '').toString();
 
@@ -24,67 +30,78 @@ class MessageCard extends StatelessWidget {
 
     final bool isSeen = (message['read'] ?? '').toString().isNotEmpty;
 
-    final String myId = FirebaseAuth.instance.currentUser!.uid;
-    final String fromId = (message['fromId'] ?? '').toString();
-    final bool isSentByMe = fromId == myId;
-
-    final String type = (message['type'] ?? 'text').toString();
     final bool isImage = type == 'image';
-    final bool isCall = type == 'call';
+
+    final bool isCall =
+        type == 'call' ||
+        message.containsKey('callType') ||
+        message.containsKey('call_type') ||
+        message.containsKey('callStatus') ||
+        message.containsKey('status') ||
+        message.containsKey('callId');
 
     // CALL fields
-    final String rawCallType = (message['callType'] ?? 'audio')
-        .toString()
-        .toLowerCase();
+    final String rawCallType =
+        (message['callType'] ?? message['call_type'] ?? 'audio')
+            .toString()
+            .trim()
+            .toLowerCase();
+
     final bool isVideo = rawCallType == 'video';
+
     final String callTypeLabel = isVideo ? "Video" : "Voice";
 
-    final String callStatus = (message['callStatus'] ?? '')
+    final String callStatus = (message['callStatus'] ?? message['status'] ?? '')
         .toString()
+        .trim()
         .toLowerCase();
 
-    final int durationSec = _toInt(message['durationSec']);
+    final int durationSec = _toInt(
+      message['durationSec'] ?? message['duration'] ?? 0,
+    );
 
     final bool isMissed = callStatus == 'missed';
     final bool isRejected = callStatus == 'rejected';
     final bool isCanceled = callStatus == 'canceled';
-    final bool isEnded = callStatus == 'ended';
+    final bool isAnswered = callStatus == 'answered';
+    final bool isEnded = callStatus == 'ended' || isAnswered;
 
     final IconData callIcon = isVideo ? Icons.videocam : Icons.call;
 
     String callTitle;
+    Color callColor;
+
     if (isMissed) {
       callTitle = "Missed $callTypeLabel call";
+      callColor = Colors.redAccent;
     } else if (isRejected) {
       callTitle = "Declined $callTypeLabel call";
+      callColor = Colors.redAccent;
     } else if (isCanceled) {
       callTitle = "Canceled $callTypeLabel call";
+      callColor = Colors.white;
     } else {
       callTitle = "$callTypeLabel call";
-    }
-
-    String callSubtitle = "";
-    if (isEnded && durationSec > 0) {
-      callSubtitle = _formatDurationClock(durationSec);
+      callColor = Colors.white;
     }
 
     return Align(
       alignment: isSentByMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        margin: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         padding: EdgeInsets.symmetric(
           vertical: (isImage || isCall) ? 6 : 10,
           horizontal: (isImage || isCall) ? 8 : 14,
         ),
         decoration: BoxDecoration(
           color: isSentByMe
-              ? const Color.fromARGB(255, 119, 170, 122)
-              : const Color.fromARGB(255, 79, 76, 76),
+              ? Color.fromARGB(255, 119, 170, 122)
+              : Color.fromARGB(255, 79, 76, 76),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(12),
-            topRight: const Radius.circular(12),
-            bottomLeft: isSentByMe ? const Radius.circular(12) : Radius.zero,
-            bottomRight: isSentByMe ? Radius.zero : const Radius.circular(12),
+            topRight: Radius.circular(12),
+            bottomLeft: isSentByMe ? Radius.circular(12) : Radius.zero,
+            bottomRight: isSentByMe ? Radius.zero : Radius.circular(12),
           ),
         ),
         child: Column(
@@ -106,7 +123,7 @@ class MessageCard extends StatelessWidget {
                       width: 220,
                       height: 220,
                       color: Colors.black26,
-                      child: const Center(
+                      child: Center(
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: Colors.white,
@@ -115,20 +132,14 @@ class MessageCard extends StatelessWidget {
                     );
                   },
                   errorBuilder: (_, __, ___) =>
-                      const Icon(Icons.broken_image, color: Colors.white70),
+                      Icon(Icons.broken_image, color: Colors.white70),
                 ),
               )
             else if (isCall)
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    callIcon,
-                    size: 18,
-                    color: (isMissed || isRejected)
-                        ? Colors.redAccent
-                        : Colors.white,
-                  ),
+                  Icon(callIcon, size: 18, color: callColor),
                   SizedBox(width: 8),
                   Flexible(
                     child: Column(
@@ -146,12 +157,12 @@ class MessageCard extends StatelessWidget {
                                     : FontWeight.normal,
                               ),
                         ),
-                        if (callSubtitle.isNotEmpty)
+                        if (isEnded && durationSec > 0)
                           Padding(
                             padding: EdgeInsets.only(top: 2),
                             child: Text(
-                              callSubtitle,
-                              style: const TextStyle(
+                              _formatDurationClock(durationSec),
+                              style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.white70,
                               ),
@@ -164,14 +175,14 @@ class MessageCard extends StatelessWidget {
               )
             else
               Text(
-                msg,
+                msg.isEmpty ? " " : msg,
                 style: Theme.of(context).textTheme.titleLarge!.copyWith(
                   color: Mycolors.light,
                   fontSize: 15,
                 ),
               ),
 
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
 
             // ---------- TIME + TICK ----------
             Row(
@@ -182,7 +193,7 @@ class MessageCard extends StatelessWidget {
                     context: context,
                     time: timeMs.toString(),
                   ),
-                  style: const TextStyle(fontSize: 11, color: Colors.white70),
+                  style: TextStyle(fontSize: 11, color: Colors.white70),
                 ),
                 SizedBox(width: Mysize.sm),
                 Text(
@@ -190,10 +201,10 @@ class MessageCard extends StatelessWidget {
                     context: context,
                     time: timeMs.toString(),
                   ),
-                  style: const TextStyle(fontSize: 11, color: Colors.white70),
+                  style: TextStyle(fontSize: 11, color: Colors.white70),
                 ),
                 if (isSentByMe) ...[
-                  const SizedBox(width: 5),
+                  SizedBox(width: 5),
                   Icon(
                     Icons.done_all,
                     size: 16,

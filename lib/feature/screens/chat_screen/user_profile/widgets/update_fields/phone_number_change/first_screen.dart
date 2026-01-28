@@ -5,15 +5,17 @@ import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/button/MyElevatedButton.dart';
 import 'package:whats_app/common/widget/style/screen_padding.dart';
 import 'package:whats_app/feature/screens/chat_screen/user_profile/widgets/update_fields/phone_number_change/second_screen.dart';
+import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/text.dart';
+import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
 class ChangeNumberFirstScreen extends StatelessWidget {
   const ChangeNumberFirstScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = MyHelperFunction.isDarkMode(context);
     return Scaffold(
-      backgroundColor: Color(0xFF0B141A),
       appBar: MyAppbar(
         showBackArrow: true,
         title: Text(
@@ -41,13 +43,13 @@ class ChangeNumberFirstScreen extends StatelessWidget {
                 Text(
                   "• • •",
                   style: TextStyle(
-                    color: Colors.white54,
+                    color: isDark ? Mycolors.light : Mycolors.dark,
                     fontSize: 24,
                     letterSpacing: 4,
                   ),
                 ),
                 SizedBox(width: 12),
-                _simIcon(Color(0xFFDFFFD6)),
+                _simIcon(Color.fromARGB(255, 140, 231, 115)),
               ],
             ),
 
@@ -57,7 +59,11 @@ class ChangeNumberFirstScreen extends StatelessWidget {
             Text(
               MyText.changeNumberMainText,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white, fontSize: 16, height: 1.4),
+              style: TextStyle(
+                color: isDark ? Mycolors.light : Mycolors.dark,
+                fontSize: 16,
+                height: 1.4,
+              ),
             ),
 
             SizedBox(height: 20),
@@ -67,7 +73,9 @@ class ChangeNumberFirstScreen extends StatelessWidget {
               MyText.changeNumberSubText,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white54,
+                color: isDark
+                    ? Mycolors.light
+                    : const Color.fromARGB(205, 39, 39, 39),
                 fontSize: 14,
                 height: 1.4,
               ),
@@ -79,7 +87,7 @@ class ChangeNumberFirstScreen extends StatelessWidget {
               MyText.changeNumberlastText,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white38,
+                color: isDark ? Mycolors.light : Mycolors.dark,
                 fontSize: 14,
                 height: 1.4,
               ),

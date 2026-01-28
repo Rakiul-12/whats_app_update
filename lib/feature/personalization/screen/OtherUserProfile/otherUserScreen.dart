@@ -7,8 +7,11 @@ import 'package:whats_app/common/widget/circular_image/MyCircularImage.dart';
 import 'package:whats_app/common/widget/style/screen_padding.dart';
 import 'package:whats_app/feature/Chatting_screen/chatting_screen.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
+import 'package:whats_app/feature/personalization/screen/OtherUserProfile/widgets/openImage.dart';
+import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/image.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
+import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
 class OtherUserProfile extends StatelessWidget {
   const OtherUserProfile({super.key});
@@ -16,34 +19,41 @@ class OtherUserProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final UserModel user = Get.arguments as UserModel;
-
+    final isDark = MyHelperFunction.isDarkMode(context);
     final pic = user.profilePicture.toString();
 
     bool isProfileAvailable = pic.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: Color(0xFF0B141A),
+      // backgroundColor: Color(0xFF0B141A),
       appBar: MyAppbar(showBackArrow: true),
       body: Padding(
         padding: MyPadding.screenPadding,
         child: Column(
           children: [
             // User Image
-            Center(
-              child: MyCirculerImage(
-                image: isProfileAvailable ? pic : MyImage.onProfileScreen,
-                height: Mysize.profile_image_height,
-                width: Mysize.profile_image_width,
-                borderWidth: 5.0,
-                padding: 0,
-                isNetworkImage: isProfileAvailable,
+            GestureDetector(
+              onTap: () => Get.to(() => const openProfile(), arguments: user),
+              child: Hero(
+                tag: user.id,
+                child: MyCirculerImage(
+                  image: isProfileAvailable ? pic : MyImage.onProfileScreen,
+                  height: Mysize.profile_image_height,
+                  width: Mysize.profile_image_width,
+                  borderWidth: 5.0,
+                  padding: 0,
+                  isNetworkImage: isProfileAvailable,
+                ),
               ),
             ),
+
             SizedBox(height: Mysize.spaceBtwItems),
             // User Name
             Text(
               user.fullName,
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                color: isDark ? Mycolors.light : Mycolors.dark,
+              ),
             ),
             SizedBox(height: Mysize.spaceBtwItems),
 

@@ -16,7 +16,6 @@ class ChangeNumberSecondScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final updateController = Get.put(UpdateUserDetailsController());
     return Scaffold(
-      backgroundColor: const Color(0xFF0B141A),
       appBar: MyAppbar(
         title: Text(
           "Change Number",

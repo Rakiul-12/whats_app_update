@@ -39,13 +39,13 @@ class OnScreenProfile extends StatelessWidget {
           final user = controller.user.value;
 
           return Hero(
-            tag: 'profile-photo',
+            tag: "profile-photo",
             child: AnimatedSwitcher(
-              duration: Duration(milliseconds: 10),
+              duration: Duration(milliseconds: 80),
               child: user.profilePicture.isNotEmpty
                   ? CachedNetworkImage(
                       key: ValueKey(user.profilePicture),
-                      height: 425,
+                      height: 325,
                       width: double.infinity,
                       fit: BoxFit.cover,
                       imageUrl: user.profilePicture,

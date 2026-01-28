@@ -81,105 +81,107 @@ class Calls_list extends StatelessWidget {
               final timeText = CallFormat.whatsappTime(timeMs);
               final subtitle = "${_statusText(status)} • $timeText";
 
-              return ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 4,
-                ),
-
-                onTap: () {
-                  final user = _userFromCall(d, isOutgoing);
-                  showModalBottomSheet(
-                    context: context,
-                    useSafeArea: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
-                    ),
-                    builder: (_) {
-                      return Padding(
-                        padding: MyPadding.screenPadding,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // AUDIO CALL
-                            ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: ZegoCallInvitationButton(
-                                otherUser: user,
-                                isVideo: false,
-                                icon: Icons.call,
-                                text: "audio",
-                                size: 20,
-                              ),
-                              title: Text(
-                                "Audio call",
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              subtitle: Text("Call using voice"),
-                            ),
-
-                            SizedBox(height: 10),
-
-                            // VIDEO CALL
-                            ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: ZegoCallInvitationButton(
-                                otherUser: user,
-                                isVideo: true,
-                                icon: Icons.videocam,
-                                text: "video",
-                                size: 20,
-                              ),
-                              title: Text(
-                                "Video call",
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              subtitle: Text("Call with video"),
-                            ),
-
-                            SizedBox(height: 10),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-
-                leading: CircleAvatar(
-                  radius: 24,
-                  child: Text(
-                    otherName.isNotEmpty ? otherName[0].toUpperCase() : "?",
+              return SingleChildScrollView(
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 4,
                   ),
-                ),
 
-                title: Text(
-                  otherName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-
-                subtitle: Row(
-                  children: [
-                    Icon(directionIcon, size: 16, color: directionColor),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  onTap: () {
+                    final user = _userFromCall(d, isOutgoing);
+                    showModalBottomSheet(
+                      context: context,
+                      useSafeArea: true,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      builder: (_) {
+                        return Padding(
+                          padding: MyPadding.screenPadding,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // AUDIO CALL
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: ZegoCallInvitationButton(
+                                  otherUser: user,
+                                  isVideo: false,
+                                  icon: Icons.call,
+                                  text: "audio",
+                                  size: 20,
+                                ),
+                                title: Text(
+                                  "Audio call",
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                subtitle: Text("Call using voice"),
+                              ),
 
-                trailing: Icon(
-                  isVideo ? Icons.videocam : Icons.call,
-                  color: (isMissed || isRejected)
-                      ? Colors.redAccent
-                      : Colors.green,
+                              SizedBox(height: 10),
+
+                              // VIDEO CALL
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: ZegoCallInvitationButton(
+                                  otherUser: user,
+                                  isVideo: true,
+                                  icon: Icons.videocam,
+                                  text: "video",
+                                  size: 20,
+                                ),
+                                title: Text(
+                                  "Video call",
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                subtitle: Text("Call with video"),
+                              ),
+
+                              SizedBox(height: 10),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+
+                  leading: CircleAvatar(
+                    radius: 24,
+                    child: Text(
+                      otherName.isNotEmpty ? otherName[0].toUpperCase() : "?",
+                    ),
+                  ),
+
+                  title: Text(
+                    otherName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+
+                  subtitle: Row(
+                    children: [
+                      Icon(directionIcon, size: 16, color: directionColor),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  trailing: Icon(
+                    isVideo ? Icons.videocam : Icons.call,
+                    color: (isMissed || isRejected)
+                        ? Colors.redAccent
+                        : Colors.green,
+                  ),
                 ),
               );
             },

@@ -27,8 +27,7 @@ class UserProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF0B141A),
-
+      // backgroundColor: Color(0xFF0B141A),
       appBar: MyAppbar(
         title: Text(
           MyText.profile,
