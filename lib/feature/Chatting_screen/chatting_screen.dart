@@ -67,7 +67,19 @@ class ChattingScreen extends StatelessWidget {
               isSelectedImage: chatC.selectedIsImage,
               onCancelSelection: chatC.clearSelection,
 
-              onEditTap: () {},
+              onEditTap: () {
+                UserController.instance.alertDialog(
+                  title: "Update Message",
+                  middleText: "Enter text to update message.",
+                  content: TextFormField(
+                    keyboardType: TextInputType.number,
+                    maxLines: 1,
+                    decoration: InputDecoration(labelText: "Message"),
+                  ),
+                  onConfirm: () {},
+                  btnText: 'update',
+                );
+              },
               onCopyTap: () {},
               onDeleteTap: () {},
               onDownloadTap: () {},

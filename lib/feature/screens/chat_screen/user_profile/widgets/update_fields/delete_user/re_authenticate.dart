@@ -48,8 +48,6 @@ class ReAuthenticate extends StatelessWidget {
             TextFormField(
               readOnly: true,
               controller: upDateController.reAuthenticate,
-              // validator: (value) =>
-              //     MyValidator.validatePhoneNumber("Phone number"),
               enabled: false,
               decoration: InputDecoration(
                 labelText: "Phone Number",

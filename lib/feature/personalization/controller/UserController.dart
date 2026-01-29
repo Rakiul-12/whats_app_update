@@ -13,6 +13,7 @@ import 'package:whats_app/utiles/popup/MyFullScreenLoader.dart';
 import 'package:whats_app/utiles/popup/SnackbarHepler.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 
 class UserController extends GetxController {
@@ -269,33 +270,33 @@ class UserController extends GetxController {
     return 'Last seen on ${dt.day}/${dt.month}/${dt.year} at $timeStr';
   }
 
-  // Delete account warning popup
-  Future<void> deleteAccountWarningPopup({
+  //  warning popup
+  Future<void> alertDialog({
     required String title,
     String? middleText,
     required VoidCallback onConfirm,
     Widget? content,
+    required String btnText,
   }) async {
     Get.defaultDialog(
+      backgroundColor: const Color.fromARGB(241, 56, 142, 60),
       title: title,
       contentPadding: EdgeInsets.all(Mysize.md),
-      middleText: middleText!,
+      middleText: middleText ?? "",
       content: content,
-      textCancel: null,
-      textConfirm: null,
       cancel: OutlinedButton(
         onPressed: () => Get.back(),
-        child: const Text('Cancel'),
+        child: Text('Cancel'),
       ),
       confirm: ElevatedButton(
         onPressed: onConfirm,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
-          side: const BorderSide(color: Colors.red),
+          side: BorderSide(color: Colors.red),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Mysize.lg),
-          child: const Text("Delete"),
+          padding: EdgeInsets.symmetric(horizontal: Mysize.lg),
+          child: Text(btnText),
         ),
       ),
     );
@@ -347,7 +348,7 @@ class UserController extends GetxController {
             message: "Verification code sent",
           );
 
-          deleteAccountWarningPopup(
+          alertDialog(
             title: "Delete Account",
             middleText: "Enter the OTP sent to your phone.",
             content: TextFormField(
@@ -357,6 +358,7 @@ class UserController extends GetxController {
               decoration: const InputDecoration(labelText: "OTP"),
             ),
             onConfirm: confirmDeleteOtp,
+            btnText: 'Delete',
           );
         },
 
