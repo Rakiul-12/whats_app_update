@@ -6,180 +6,186 @@ import 'package:whats_app/data/repository/user/UserRepository.dart';
 import 'package:whats_app/feature/Chatting_screen/chatting_screen.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
 import 'package:whats_app/feature/authentication/backend/MessageRepo/MessageRepository.dart';
+import 'package:whats_app/feature/authentication/backend/chat_list_controller/chatListController.dart';
 import 'package:whats_app/feature/screens/chat_screen/widgets/user_profile_dialog.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/image.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
-class chat_screen_chat_list extends StatelessWidget {
-  const chat_screen_chat_list({super.key});
+class ChatScreenChatList extends StatelessWidget {
+  const ChatScreenChatList({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(UserRepository());
     final isDark = MyHelperFunction.isDarkMode(context);
     final String myId = FirebaseAuth.instance.currentUser!.uid;
+    final chatListController = Get.put(ChatListController());
 
     return Expanded(
       child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: controller.getAllUsersStream(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting ||
-              snapshot.connectionState == ConnectionState.none) {
-            return const Center(
-              child: CircularProgressIndicator(strokeWidth: 2),
-            );
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator(strokeWidth: 2));
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No call history"));
+            return Center(child: Text("No chats"));
           }
 
-          final users = snapshot.data!.docs
+          final allUsers = snapshot.data!.docs
               .map((doc) => UserModel.fromSnapshot(doc))
+              .where((u) => u.id != myId)
               .toList();
 
-          return ListView.separated(
-            separatorBuilder: (context, index) =>
-                SizedBox(height: Mysize.spaceBtwInputFields),
-            itemCount: users.length,
-            itemBuilder: (context, index) {
-              final user = users[index];
+          //  deleted chat
+          return StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(myId)
+                .collection('deleted_chats')
+                .snapshots(),
+            builder: (context, deletedSnap) {
+              final deletedIds = deletedSnap.hasData
+                  ? deletedSnap.data!.docs.map((e) => e.id).toSet()
+                  : <String>{};
 
-              return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: Messagerepository.GetLastMessage(user),
-                builder: (context, lastSnap) {
-                  String subtitleText = user.about;
-                  String timeText = '';
-                  FontWeight nameWeight = FontWeight.normal;
+              final users = allUsers
+                  .where((user) => !deletedIds.contains(user.id))
+                  .toList();
 
-                  if (lastSnap.hasData && lastSnap.data!.docs.isNotEmpty) {
-                    final lastDoc = lastSnap.data!.docs.first;
-                    final data = lastDoc.data();
+              if (users.isEmpty) {
+                return Center(child: Text("No chats"));
+              }
 
-                    final String msg = (data['msg'] ?? '').toString();
-                    final dynamic sentTime = data['sent'];
-                    final String read = (data['read'] ?? '').toString();
-                    final String toId = (data['toId'] ?? '').toString();
-                    final String type = (data['type'] ?? 'text').toString();
-
-                    //  show proper preview based on message type
-                    if (type == 'image') {
-                      subtitleText = "📸 Image";
-                    } else if (type == 'call') {
-                      subtitleText = "📞 Call";
-                    } else {
-                      subtitleText = msg;
-                    }
-
-                    timeText = Messagerepository.getLastMessageTime(
-                      context: context,
-                      time: sentTime,
-                    );
-
-                    final bool isUnread = (toId == myId) && read.isEmpty;
-                    nameWeight = isUnread ? FontWeight.bold : FontWeight.normal;
-                  }
+              return ListView.separated(
+                separatorBuilder: (_, __) =>
+                    SizedBox(height: Mysize.spaceBtwInputFields),
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final user = users[index];
 
                   return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                    stream: Messagerepository.getUnreadMessage(user),
-                    builder: (context, unreadSnap) {
-                      int unreadCount = 0;
-                      if (unreadSnap.hasData && unreadSnap.data != null) {
-                        unreadCount = unreadSnap.data!.docs.length;
+                    stream: Messagerepository.GetLastMessage(user),
+                    builder: (context, lastSnap) {
+                      String subtitleText = user.about;
+                      String timeText = '';
+                      FontWeight nameWeight = FontWeight.normal;
+
+                      // logic for subtitle text with message type
+                      if (lastSnap.hasData && lastSnap.data!.docs.isNotEmpty) {
+                        final data = lastSnap.data!.docs.first.data();
+
+                        final String msg = data['msg'] ?? '';
+                        final dynamic sentTime = data['sent'];
+                        final String read = data['read'] ?? '';
+                        final String toId = data['toId'] ?? '';
+                        final String type = data['type'] ?? 'text';
+
+                        final Map<String, dynamic> deletedBy =
+                            data['deletedBy'] ?? {};
+                        final bool isDeletedForMe = deletedBy[myId] == true;
+
+                        if (isDeletedForMe) {
+                          subtitleText = user.about;
+                        } else {
+                          if (type == 'image') {
+                            subtitleText = "📸 Image";
+                          } else if (type == 'call') {
+                            subtitleText = "📞 Call";
+                          } else {
+                            subtitleText = msg;
+                          }
+                        }
+
+                        timeText = Messagerepository.getLastMessageTime(
+                          context: context,
+                          time: sentTime,
+                        );
+
+                        if (toId == myId && read.isEmpty) {
+                          nameWeight = FontWeight.bold;
+                        }
                       }
 
-                      final bool hasUnread = unreadCount > 0;
+                      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: Messagerepository.getUnreadMessage(user),
+                        builder: (context, unreadSnap) {
+                          final unreadCount = unreadSnap.data?.docs.length ?? 0;
 
-                      final FontWeight effectiveNameWeight = hasUnread
-                          ? FontWeight.bold
-                          : nameWeight;
+                          final hasUnread = unreadCount > 0;
 
-                      final FontWeight subtitleWeight = hasUnread
-                          ? FontWeight.bold
-                          : FontWeight.normal;
-
-                      final FontWeight timeWeight = hasUnread
-                          ? FontWeight.bold
-                          : FontWeight.normal;
-
-                      return ListTile(
-                        onTap: () =>
-                            Get.to(() => ChattingScreen(), arguments: user),
-                        leading: GestureDetector(
-                          onTap: () => showUesrDialog(context, user),
-                          child: Hero(
-                            tag: user.id,
-                            child: CircleAvatar(
-                              radius: 24,
-                              backgroundImage: user.profilePicture.isNotEmpty
-                                  ? NetworkImage(user.profilePicture)
-                                  : AssetImage(MyImage.onProfileScreen),
+                          return ListTile(
+                            onLongPress: () {
+                              chatListController.selectUser(user);
+                            },
+                            onTap: () =>
+                                Get.to(() => ChattingScreen(), arguments: user),
+                            leading: GestureDetector(
+                              onTap: () => showUesrDialog(context, user),
+                              child: Hero(
+                                tag: user.id,
+                                child: CircleAvatar(
+                                  radius: 24,
+                                  backgroundImage:
+                                      user.profilePicture.isNotEmpty
+                                      ? NetworkImage(user.profilePicture)
+                                      : AssetImage(MyImage.onProfileScreen),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        title: Text(
-                          user.username,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          style: Theme.of(context).textTheme.titleLarge!
-                              .copyWith(
-                                color: isDark
-                                    ? Mycolors.borderPrimary
-                                    : Mycolors.textPrimary,
-                                fontWeight: effectiveNameWeight,
-                              ),
-                        ),
-                        subtitle: Text(
-                          subtitleText,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          style: Theme.of(context).textTheme.bodyLarge!
-                              .copyWith(
-                                color: isDark
-                                    ? Mycolors.borderPrimary
-                                    : Mycolors.textPrimary,
-                                fontWeight: subtitleWeight,
-                              ),
-                        ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              timeText,
-                              style: Theme.of(context).textTheme.bodySmall!
+                            title: Text(
+                              user.username,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleLarge!
                                   .copyWith(
+                                    fontWeight: hasUnread
+                                        ? FontWeight.bold
+                                        : nameWeight,
                                     color: isDark
                                         ? Mycolors.borderPrimary
                                         : Mycolors.textPrimary,
-                                    fontWeight: timeWeight,
                                   ),
                             ),
-                            const SizedBox(height: 6),
-                            if (hasUnread)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 4,
-                                ),
-                                decoration: const BoxDecoration(
-                                  color: Mycolors.success,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  unreadCount.toString(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                            subtitle: Text(
+                              subtitleText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodyLarge!
+                                  .copyWith(
+                                    fontWeight: hasUnread
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                   ),
-                                ),
-                              ),
-                          ],
-                        ),
+                            ),
+                            trailing: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(timeText),
+                                if (hasUnread)
+                                  Container(
+                                    margin: EdgeInsets.only(top: 6),
+                                    padding: EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Mycolors.success,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Text(
+                                      unreadCount.toString(),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       );
                     },
                   );

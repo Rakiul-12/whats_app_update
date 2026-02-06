@@ -24,7 +24,6 @@ class UserController extends GetxController {
   bool _isSendingOtp = false;
   String verifyId = '';
   Rx<UserModel> user = UserModel.empty().obs;
-
   // text fields
   final userName = TextEditingController();
   final reAuthenticate = TextEditingController();

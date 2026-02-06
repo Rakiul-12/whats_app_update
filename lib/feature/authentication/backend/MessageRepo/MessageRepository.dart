@@ -31,6 +31,21 @@ class Messagerepository extends GetxController {
     }
   }
 
+  // for sent message
+  static Future<void> initMe() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final snap = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+
+    if (snap.exists) {
+      me = UserModel.fromSnapshot(snap);
+    }
+  }
+
   // Build conversation ID between current user and another user
   static String getConversationID(String otherUserId) {
     final myId = FirebaseAuth.instance.currentUser!.uid;
@@ -61,11 +76,11 @@ class Messagerepository extends GetxController {
   ) async {
     final timeId = DateTime.now().millisecondsSinceEpoch.toString();
     final String currentUid = FirebaseAuth.instance.currentUser!.uid;
-
     final cid = getConversationID(chatUser.id);
 
     final String senderName = Messagerepository.me.username;
 
+    // send message
     await FirebaseFirestore.instance
         .collection('chats')
         .doc(cid)
@@ -80,6 +95,22 @@ class Messagerepository extends GetxController {
           'sent': FieldValue.serverTimestamp(),
           'senderName': senderName,
         });
+
+    // restore chat for receiver
+    await FirebaseFirestore.instance
+        .collection(MyKeys.userCollection)
+        .doc(chatUser.id)
+        .collection('deleted_chats')
+        .doc(currentUid)
+        .delete();
+
+    //  restore chat for sender
+    await FirebaseFirestore.instance
+        .collection(MyKeys.userCollection)
+        .doc(currentUid)
+        .collection('deleted_chats')
+        .doc(chatUser.id)
+        .delete();
   }
 
   // getFormattedTime
@@ -91,23 +122,21 @@ class Messagerepository extends GetxController {
     if (dt == null) return '';
 
     final now = DateTime.now();
-
     final today = DateTime(now.year, now.month, now.day);
     final messageDay = DateTime(dt.year, dt.month, dt.day);
 
     final diffDays = today.difference(messageDay).inDays;
     final timeText = TimeOfDay.fromDateTime(dt).format(context);
 
-    if (diffDays == 1) {
-      return "Yesterday, $timeText";
-    }
     if (diffDays == 0) {
-      return timeText;
+      return "Today, $timeText";
+    } else if (diffDays == 1) {
+      return "Yesterday, $timeText";
+    } else {
+      return "${dt.day.toString().padLeft(2, '0')}/"
+          "${dt.month.toString().padLeft(2, '0')}/"
+          "${dt.year}, $timeText";
     }
-
-    return "${dt.day.toString().padLeft(2, '0')}/"
-        "${dt.month.toString().padLeft(2, '0')}/"
-        "${dt.year}, $timeText";
   }
 
   static DateTime? _parseTime(dynamic time) {

@@ -51,7 +51,7 @@ class navigationController extends GetxController {
 
   RxInt selectedIndex = 0.obs;
   List<Widget> Screens = [
-    chat_screen(),
+    Chat_Screen(),
     update_screen(),
     communities_screen(),
     call_screen(),

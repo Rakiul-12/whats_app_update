@@ -21,6 +21,12 @@ class MessageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String myId = FirebaseAuth.instance.currentUser!.uid;
+
+    final Map<String, dynamic> deletedBy = message['deletedBy'] ?? {};
+    if (deletedBy[myId] == true) {
+      return SizedBox.shrink();
+    }
+
     final String fromId = (message['fromId'] ?? '').toString().trim();
     final bool isSentByMe = fromId == myId;
 
@@ -91,8 +97,8 @@ class MessageCard extends StatelessWidget {
     final Color bubbleColor = isSelected
         ? Colors.blueGrey
         : (isSentByMe
-              ? const Color.fromARGB(255, 119, 170, 122)
-              : const Color.fromARGB(255, 79, 76, 76));
+              ? Color.fromARGB(255, 119, 170, 122)
+              : Color.fromARGB(255, 79, 76, 76));
 
     return Align(
       alignment: isSentByMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -107,10 +113,10 @@ class MessageCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: bubbleColor,
             borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(12),
-              topRight: const Radius.circular(12),
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(12),
               bottomLeft: isSentByMe ? const Radius.circular(12) : Radius.zero,
-              bottomRight: isSentByMe ? Radius.zero : const Radius.circular(12),
+              bottomRight: isSentByMe ? Radius.zero : Radius.circular(12),
             ),
           ),
           child: Column(
@@ -127,7 +133,7 @@ class MessageCard extends StatelessWidget {
                     height: 220,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.broken_image, color: Colors.white70),
+                        Icon(Icons.broken_image, color: Colors.white70),
                   ),
                 )
               else if (isCall)

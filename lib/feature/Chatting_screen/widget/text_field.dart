@@ -19,7 +19,7 @@ class Text_filed extends GetView<ChatController> {
           // TEXT FIELD
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(left: 10),
+              padding: EdgeInsets.only(left: 10),
               child: TextFormField(
                 maxLines: null,
                 controller: controller.textController,

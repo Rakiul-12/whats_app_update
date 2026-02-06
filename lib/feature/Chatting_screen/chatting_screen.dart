@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -77,12 +76,55 @@ class ChattingScreen extends StatelessWidget {
 
               // delete button
               onDeleteTap: () async {
-                await chatC.deleteSelectedMessage();
+                final msg = chatC.selectedMessage.value;
+                if (msg == null) return;
+
+                final String myId = FirebaseAuth.instance.currentUser!.uid;
+                final String fromId = (msg['fromId'] ?? '').toString().trim();
+
+                if (fromId == myId) {
+                  showModalBottomSheet(
+                    context: Get.context!,
+                    builder: (ctx) {
+                      return SafeArea(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                              ),
+                              title: Text("Delete for me"),
+                              onTap: () async {
+                                Navigator.pop(ctx);
+                                await chatC.deleteForMe();
+                              },
+                            ),
+                            ListTile(
+                              leading: Icon(
+                                Icons.delete_forever,
+                                color: Colors.redAccent,
+                              ),
+                              title: Text("Delete for everyone"),
+                              onTap: () async {
+                                Navigator.pop(ctx);
+                                await chatC.deleteForEveryone(msg);
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                } else {
+                  await chatC.deleteForMe();
+                }
               },
 
               // download button
               onDownloadTap: () async {
-                await chatC.downloadImageFormChat();
+                await chatC.downloadImageFromChat();
               },
             ),
             body: SafeArea(
@@ -94,9 +136,7 @@ class ChattingScreen extends StatelessWidget {
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
+                          return Center(child: CircularProgressIndicator());
                         }
 
                         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {

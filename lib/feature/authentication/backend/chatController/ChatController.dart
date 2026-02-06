@@ -4,11 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:image_downloader/image_downloader.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:whats_app/binding/enum.dart';
+import 'package:whats_app/common/widget/permision_handeler/permission_handeler.dart';
 import 'package:whats_app/data/repository/user/UserRepository.dart';
 import 'package:whats_app/data/service/cloudinary_service_for_chat.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
@@ -24,6 +23,8 @@ class ChatController extends GetxController {
   ChatController(this.otherUser);
   final _cloudinaryServicesForChat = Get.put(cloudinaryServicesForChat());
   final _userRepo = Get.put(UserRepository());
+  final _permissionHandeler = Get.put(PermissionHandeler());
+  final _messageRepo = Get.put(Messagerepository());
 
   // text controller
   final textController = TextEditingController();
@@ -56,18 +57,9 @@ class ChatController extends GetxController {
     final fromId = (msg['fromId'] ?? '').toString();
 
     if (fromId != myId) {
-      // Other user's message: disable editing
-      selectedMessage.value = {
-        ...msg,
-        'docId': docId,
-        'canEdit': false, // mark editable false
-      };
+      selectedMessage.value = {...msg, 'docId': docId, 'canEdit': false};
     } else {
-      selectedMessage.value = {
-        ...msg,
-        'docId': docId,
-        'canEdit': true, // my message: editable
-      };
+      selectedMessage.value = {...msg, 'docId': docId, 'canEdit': true};
     }
 
     selectedMessageText.value = (msg['msg'] ?? msg['message'] ?? '').toString();
@@ -113,17 +105,7 @@ class ChatController extends GetxController {
     return _cloudinaryServicesForChat.uploadImage(image, MyKeys.uploadImage);
   }
 
-  //  Delete profile picture form cloudinary
-  // Future<dio.Response> deleteProfilePicture(String publicId) async {
-  //   try {
-  //     dio.Response response = await _coludnaryServcies.deleteImage(publicId);
-  //     return response;
-  //   } catch (e) {
-  //     throw "Something went wrong. Please try again";
-  //   }
-  // }
-
-  // Image sending logic from camera
+  // Image sending  from camera
   Future<void> sendImageFromCamera() async {
     await Messagerepository.instance.sendImageMessage(
       otherUser: otherUser,
@@ -132,7 +114,7 @@ class ChatController extends GetxController {
     );
   }
 
-  // Image sending logic from gallery
+  // Image sending  from gallery
   Future<void> sendImageFromGallery() async {
     await Messagerepository.instance.sendImageMessage(
       otherUser: otherUser,
@@ -164,8 +146,55 @@ class ChatController extends GetxController {
         });
   }
 
-  // delete chat message
-  Future<void> deleteSelectedMessage() async {
+  // delete chat message for me
+  Future<void> deleteForMe() async {
+    final msg = selectedMessage.value;
+    if (msg == null) {
+      Get.snackbar(
+        "Select a message",
+        "Long-press a message first",
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+
+    final docId = msg['docId']?.toString();
+    if (docId == null) {
+      Get.snackbar(
+        "Error",
+        "Missing message id",
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+
+    final cid = Messagerepository.getConversationID(otherUser.id);
+
+    try {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+
+      // Soft delete: mark as deleted for this user only
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(cid)
+          .collection('messages')
+          .doc(docId)
+          .update({'deletedBy.$uid': true});
+
+      clearSelection();
+      Get.snackbar(
+        "Deleted",
+        "Message delete for me",
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 2),
+      );
+    } catch (e) {
+      Get.snackbar("Error", "Delete failed", snackPosition: SnackPosition.TOP);
+    }
+  }
+
+  // message delete For Everyone
+  Future<void> deleteForEveryone(Map<String, dynamic> msg) async {
     final msg = selectedMessage.value;
     if (msg == null) {
       Get.snackbar(
@@ -208,7 +237,7 @@ class ChatController extends GetxController {
       clearSelection();
       Get.snackbar(
         "Deleted",
-        "Message deleted successfully",
+        "Message delete for everyone",
         snackPosition: SnackPosition.TOP,
         duration: Duration(seconds: 2),
       );
@@ -219,49 +248,49 @@ class ChatController extends GetxController {
   }
 
   // download image from chat
-  Future<void> downloadImageFormChat() async {
+  Future<void> downloadImageFromChat() async {
     final msg = selectedMessage.value;
+
     if (msg == null) {
       Get.snackbar("Error", "No message selected");
       return;
     }
 
-    final type = (msg['type'] ?? '').toString().toLowerCase();
-    final imageUrl = msg['msg'] ?? msg['message'] ?? '';
-
-    if (type != 'image' || imageUrl.isEmpty) {
-      Get.snackbar("Error", "Selected message is not an image");
+    final imageUrl = msg['msg'] ?? '';
+    if (imageUrl.isEmpty) {
+      Get.snackbar("Error", "Invalid image");
       return;
     }
 
     try {
-      // Ask permission for storage
-      if (Platform.isAndroid) {
-        final status = await Permission.storage.request();
-        if (!status.isGranted) {
-          Get.snackbar("Permission denied", "Cannot download image");
-          return;
-        }
+      final hasPermission = await _requestImagePermission();
+      if (!hasPermission) {
+        Get.snackbar("Permission denied", "Cannot download image");
+        return;
       }
 
-      // Get app directory
-      final directory = await getApplicationDocumentsDirectory();
-      final folder = Directory('${directory.path}/WhataApp');
-      if (!await folder.exists()) {
-        await folder.create(recursive: true);
+      // directory
+      final directory = Directory(
+        '/storage/emulated/0/Pictures/WhatsApp Images',
+      );
+
+      if (!await directory.exists()) {
+        await directory.create(recursive: true);
       }
 
-      // File path
       final fileName = 'IMG_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final filePath = '${folder.path}/$fileName';
+      final savePath = '${directory.path}/$fileName';
 
-      // Download using Dio
-      await dio.Dio().download(imageUrl, filePath);
+      await dio.Dio().download(imageUrl, savePath);
 
-      Get.snackbar("Downloaded", "Image saved to ${folder.path}");
+      Get.snackbar(
+        "Downloaded",
+        "Image saved to Gallery",
+        snackPosition: SnackPosition.TOP,
+      );
     } catch (e) {
+      debugPrint("Download error: $e");
       Get.snackbar("Error", "Failed to download image");
-      debugPrint("Download failed: $e");
     }
   }
 
@@ -306,6 +335,17 @@ class ChatController extends GetxController {
       },
       btnText: 'Update',
     );
+  }
+
+  // request Image download Permission
+  Future<bool> _requestImagePermission() async {
+    if (Platform.isAndroid) {
+      if (await Permission.photos.isGranted) return true;
+
+      final status = await Permission.photos.request();
+      return status.isGranted;
+    }
+    return true;
   }
 
   @override

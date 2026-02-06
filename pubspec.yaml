@@ -91,10 +91,10 @@ dependencies:
 
 
   # image_downloader
-  image_downloader: ^0.31.0
+  # image_gallery_saver: ^1.7.1
 
   # path_provider
-  path_provider: ^2.1.12
+  path_provider: ^2.1.5
 
 
 

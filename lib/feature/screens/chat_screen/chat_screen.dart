@@ -5,7 +5,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:whats_app/common/widget/appbar/MyAppBar.dart';
 import 'package:whats_app/common/widget/search_bar/search_bar.dart';
 import 'package:whats_app/data/repository/user/UserRepository.dart';
-import 'package:whats_app/feature/authentication/backend/chatScreenController/ChatScreenController.dart';
+import 'package:whats_app/feature/authentication/backend/chat_list_controller/chatListController.dart';
 import 'package:whats_app/feature/screens/chat_screen/user_profile/user_profile.dart';
 import 'package:whats_app/feature/screens/chat_screen/widgets/chat_list.dart';
 import 'package:whats_app/utiles/CameraAccess/CameraAccess.dart';
@@ -14,91 +14,86 @@ import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/const/text.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
-class chat_screen extends StatelessWidget {
-  const chat_screen({super.key});
-  // final UserModel otherUser;
+class Chat_Screen extends StatelessWidget {
+  const Chat_Screen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Get.put(ChatScreenController());
-    final RepoController = Get.put(UserRepository());
     final controller = Get.put(CameraAccess());
+    final chatListController = Get.put(ChatListController());
     bool isDark = MyHelperFunction.isDarkMode(context);
 
     return Scaffold(
-      // AppBar
       appBar: MyAppbar(
-        title: Text(
-          MyText.WhatsApp,
-          style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-            color: isDark ? Mycolors.borderPrimary : Mycolors.textPrimary,
-          ),
-        ),
+        title: Obx(() {
+          if (chatListController.isSelecting.value) {
+            return TextButton(
+              onPressed: chatListController.clearSelection,
+              child: Text(
+                "Cancel",
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineMedium!.copyWith(color: Mycolors.error),
+              ),
+            );
+          } else {
+            return Text(
+              MyText.WhatsApp,
+              style: Theme.of(context).textTheme.headlineLarge!.copyWith(
+                color: isDark ? Mycolors.borderPrimary : Mycolors.textPrimary,
+              ),
+            );
+          }
+        }),
         actions: [
-          // Camera Icon
-          IconButton(
-            onPressed: controller.GetCameraAccess,
-            icon: const Icon(Icons.camera_alt_outlined),
-          ),
-          const SizedBox(width: Mysize.sm),
-          //User Profile
-          IconButton(
-            onPressed: () async {
-              final uid = FirebaseAuth.instance.currentUser?.uid;
-              if (uid == null) return;
+          Obx(() {
+            if (chatListController.isSelecting.value) {
+              return SizedBox();
+            } else {
+              return IconButton(
+                onPressed: controller.GetCameraAccess,
+                icon: Icon(Icons.camera_alt_outlined),
+              );
+            }
+          }),
+          SizedBox(width: Mysize.sm),
 
-              final user = await UserRepository.instance.getUserById(uid);
+          Obx(() {
+            if (chatListController.isSelecting.value) {
+              return IconButton(
+                icon: Icon(Icons.delete),
+                onPressed: chatListController.deleteChat,
+              );
+            } else {
+              return IconButton(
+                icon: Icon(Iconsax.user),
+                onPressed: () async {
+                  final uid = FirebaseAuth.instance.currentUser?.uid;
+                  if (uid == null) return;
 
-              if (user == null) {
-                Get.snackbar("Error", "User data not found in Firestore");
-                return;
-              }
+                  final user = await UserRepository.instance.getUserById(uid);
+                  if (user == null) return;
 
-              Get.to(() => UserProfile(), arguments: user);
-            },
-            icon: Icon(Iconsax.user),
-          ),
+                  Get.to(() => UserProfile(), arguments: user);
+                },
+              );
+            }
+          }),
         ],
       ),
-
-      // add button
-      floatingActionButton: SizedBox(
-        height: Mysize.floatingButtonHeight,
-        width: Mysize.anotherfloatingButtonWidth,
-        child: ElevatedButton(
-          onPressed: () async {
-            // await NotificationService.instance.showChatNotification(
-            //   id: 1,
-            //   title: "Test",
-            //   body: "Hello",
-            //   payload: "test_payload",
-            // );
-          },
-          style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.zero,
-            backgroundColor: Color.fromARGB(255, 2, 173, 65),
-            side: BorderSide.none,
-          ),
-          child: Icon(
-            Icons.add,
-            size: Mysize.iconLg,
-            color: isDark ? Mycolors.textPrimary : Mycolors.light,
-          ),
-        ),
-      ),
-
       body: Column(
         children: [
-          // search bar
-          Padding(
-            padding: EdgeInsets.only(left: 10, right: 10, bottom: 15, top: 20),
-            child: ChatScreenSearchBar(),
-          ),
+          Obx(() {
+            if (chatListController.isSelecting.value) {
+              return SizedBox.shrink();
+            }
+            return Padding(
+              padding: EdgeInsets.all(15),
+              child: ChatScreenSearchBar(),
+            );
+          }),
 
-          // SizedBox(height: Mysize.spaceBtwSections),
-
-          // chats
-          chat_screen_chat_list(),
+          ChatScreenChatList(),
         ],
       ),
     );

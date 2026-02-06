@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:whats_app/data/service/App_Lifecycle_Service/app_lifecycle_service.dart';
 import 'package:whats_app/data/service/notification_service/NotificationService.dart';
 import 'package:whats_app/data/service/zego_service.dart';
+import 'package:whats_app/feature/authentication/backend/MessageRepo/MessageRepository.dart';
 import 'package:whats_app/feature/authentication/backend/call_repo/call_repo.dart';
 import 'package:whats_app/feature/personalization/controller/UserController.dart';
 import 'package:whats_app/firebase_options.dart';
@@ -31,6 +32,7 @@ Future<void> main() async {
   Get.put(UserController(), permanent: true);
   Get.put(AppLifecycleService(), permanent: true);
   Get.put(CallRepo(), permanent: true);
+  await Messagerepository.initMe();
 
   // background handler
   // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
