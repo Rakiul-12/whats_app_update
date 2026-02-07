@@ -8,13 +8,13 @@ import 'package:whats_app/feature/screens/update_screen/update_screen.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
-class navigationMenuScreen extends StatelessWidget {
-  const navigationMenuScreen({super.key});
+class NavigationMenuScreen extends StatelessWidget {
+  const NavigationMenuScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     bool dark = MyHelperFunction.isDarkMode(context);
-    final controller = Get.put(navigationController());
+    final controller = Get.put(NavigationController());
     return Scaffold(
       body: Obx(() => controller.Screens[controller.selectedIndex.value]),
       bottomNavigationBar: Obx(
@@ -46,14 +46,14 @@ class navigationMenuScreen extends StatelessWidget {
   }
 }
 
-class navigationController extends GetxController {
-  static navigationController get instance => Get.find();
+class NavigationController extends GetxController {
+  static NavigationController get instance => Get.find();
 
   RxInt selectedIndex = 0.obs;
   List<Widget> Screens = [
-    Chat_Screen(),
-    update_screen(),
-    communities_screen(),
-    call_screen(),
+    ChatScreen(),
+    UpdateScreen(),
+    CommunitiesScreen(),
+    CallScreen(),
   ];
 }

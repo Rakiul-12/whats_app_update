@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:iconsax/iconsax.dart';
-import 'package:whats_app/common/widget/circular_icon_and_text/custom_icon_and_text.dart';
-import 'package:whats_app/common/widget/section_heading/section_heading.dart';
-import 'package:whats_app/common/widget/style/screen_padding.dart';
 import 'package:whats_app/feature/screens/calls_screen/widget/call_list.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
-class call_screen extends StatelessWidget {
-  const call_screen({super.key});
+class CallScreen extends StatelessWidget {
+  const CallScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,56 +34,12 @@ class call_screen extends StatelessWidget {
       // AppBar
       appBar: AppBar(
         title: Text("Calls", style: Theme.of(context).textTheme.headlineMedium),
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert)),
-        ],
+        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.search))],
       ),
 
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // top buttons
-          Padding(
-            padding: MyPadding.screenPadding,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Custom_circualar_icon_and_text(
-                  icon: Icons.call,
-                  text: "Call",
-                  onTap: () {},
-                ),
-                Custom_circualar_icon_and_text(
-                  icon: Icons.calendar_month,
-                  text: "Schedule",
-                  onTap: () {},
-                ),
-                Custom_circualar_icon_and_text(
-                  icon: Icons.dialpad_outlined,
-                  text: "Keypad",
-                  onTap: () {},
-                ),
-                Custom_circualar_icon_and_text(
-                  icon: Iconsax.heart,
-                  text: "Favourite",
-                  onTap: () {},
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: Mysize.spaceBtwSections),
-
-          // heading
-          Padding(
-            padding: const EdgeInsets.only(left: 25),
-            child: MySectionHeading(title: "Recent", showActionBtn: false),
-          ),
-
-          SizedBox(height: Mysize.spaceBtwItems),
-          Expanded(child: Calls_list()),
-        ],
+        children: [Expanded(child: Calls_list())],
       ),
     );
   }

@@ -13,4 +13,6 @@ class MyImage {
 
   static const String loadingAnimation =
       "assets/animation/community/Share on Whatsapp.json";
+
+  static const String lockAnimation = "assets/animation/lock/lock.json";
 }

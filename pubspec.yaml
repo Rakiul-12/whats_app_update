@@ -129,7 +129,7 @@ flutter:
     - assets/logo/
     - assets/fonts/
     - assets/animation/community/
-
+    - assets/animation/lock/
   fonts:
     - family: "Nunito"
       fonts:

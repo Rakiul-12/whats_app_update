@@ -14,8 +14,8 @@ import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/const/text.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
-class Chat_Screen extends StatelessWidget {
-  const Chat_Screen({super.key});
+class ChatScreen extends StatelessWidget {
+  const ChatScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +80,24 @@ class Chat_Screen extends StatelessWidget {
             }
           }),
         ],
+      ),
+      // floating action button
+      floatingActionButton: SizedBox(
+        height: Mysize.floatingButtonHeight,
+        width: Mysize.anotherfloatingButtonWidth,
+        child: ElevatedButton(
+          onPressed: () {},
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.zero,
+            backgroundColor: Color.fromARGB(255, 2, 173, 65),
+            side: BorderSide.none,
+          ),
+          child: Icon(
+            Icons.add,
+            size: Mysize.iconMd,
+            color: isDark ? Mycolors.dark : Mycolors.light,
+          ),
+        ),
       ),
       body: Column(
         children: [

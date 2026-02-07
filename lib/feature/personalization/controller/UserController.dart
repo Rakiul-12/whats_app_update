@@ -162,7 +162,7 @@ class UserController extends GetxController {
       // await AuthenticationRepository.instance.cacheUser(user.value);
 
       MyFullScreenLoader.stopLoading();
-      Get.offAll(() => navigationMenuScreen());
+      Get.offAll(() => NavigationMenuScreen());
     } catch (e) {
       MyFullScreenLoader.stopLoading();
       MySnackBarHelpers.errorSnackBar(

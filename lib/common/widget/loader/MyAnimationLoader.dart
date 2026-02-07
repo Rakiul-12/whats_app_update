@@ -30,7 +30,7 @@ class MyAnimationLoader extends StatelessWidget {
           children: [
             /// Animation
             Lottie.asset(animation, width: Get.width * 0.8),
-            const SizedBox(height: Mysize.defaultSpace),
+            SizedBox(height: Mysize.defaultSpace),
 
             /// Title
             Text(
@@ -38,7 +38,7 @@ class MyAnimationLoader extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: Mysize.defaultSpace),
+            SizedBox(height: Mysize.defaultSpace),
 
             showActionButton
                 ? SizedBox(

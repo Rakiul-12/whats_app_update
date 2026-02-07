@@ -80,7 +80,7 @@ class AuthenticationRepository extends GetxController {
         if (user.displayName == null || user.displayName!.trim().isEmpty) {
           Get.offAll(() => profile_screen());
         } else {
-          Get.offAll(() => navigationMenuScreen());
+          Get.offAll(() => NavigationMenuScreen());
         }
       } else {
         Get.offAll(() => Log_in_screen());
