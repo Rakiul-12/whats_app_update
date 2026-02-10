@@ -42,8 +42,9 @@ class Calls_list extends StatelessWidget {
         final docs = [...snap.data!.docs];
         docs.sort((a, b) {
           int getTime(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-            final d = doc.data();
-            final v = d["updatedAt"] ?? d["createdAt"] ?? d["endedAt"] ?? 0;
+            final data = doc.data();
+            final v =
+                data["updatedAt"] ?? data["createdAt"] ?? data["endedAt"] ?? 0;
             return (v is int) ? v : int.tryParse(v.toString()) ?? 0;
           }
 
@@ -95,6 +96,7 @@ class Calls_list extends StatelessWidget {
 
                 onTap: () {
                   final user = _userFromCall(d, isOutgoing);
+                  // bottom sheet for call
                   showModalBottomSheet(
                     context: context,
                     useSafeArea: true,
@@ -164,7 +166,12 @@ class Calls_list extends StatelessWidget {
                   otherName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: (isRejected || isMissed)
+                        ? Mycolors.error
+                        : Mycolors.grey,
+                  ),
                 ),
 
                 subtitle: Row(
@@ -176,6 +183,11 @@ class Calls_list extends StatelessWidget {
                         subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: (isRejected || isMissed)
+                              ? Mycolors.error
+                              : Mycolors.grey,
+                        ),
                       ),
                     ),
                   ],
@@ -184,8 +196,8 @@ class Calls_list extends StatelessWidget {
                 trailing: Icon(
                   isVideo ? Icons.videocam : Icons.call,
                   color: (isMissed || isRejected)
-                      ? Colors.redAccent
-                      : Colors.green,
+                      ? Mycolors.error
+                      : Mycolors.success,
                 ),
               );
             },
