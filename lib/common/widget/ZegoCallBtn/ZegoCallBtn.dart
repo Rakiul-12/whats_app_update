@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
-import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 import 'package:zego_uikit/zego_uikit.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
@@ -25,8 +24,6 @@ class ZegoCallInvitationButton extends StatelessWidget {
   final double? size;
   @override
   Widget build(BuildContext context) {
-    final bool isDark = MyHelperFunction.isDarkMode(context);
-
     String conversationId(String a, String b) {
       final list = [a, b]..sort();
       return "${list[0]}_${list[1]}";
@@ -44,16 +41,14 @@ class ZegoCallInvitationButton extends StatelessWidget {
         "call_${myId}_${DateTime.now().millisecondsSinceEpoch}";
     String customData(String callType) => jsonEncode({
       "conversationId": convId,
-
       "fromId": myId,
       "fromName": FirebaseAuth.instance.currentUser?.displayName ?? "Me",
       "fromPhone": FirebaseAuth.instance.currentUser?.phoneNumber ?? "",
-
       "toId": otherUser.id,
       "toName": otherUser.username,
-      "toPhone": otherUser.phoneNumber ?? "",
-
+      "toPhone": otherUser.phoneNumber,
       "callType": callType,
+      "toImage": otherUser.profilePicture,
     });
 
     return ZegoSendCallInvitationButton(

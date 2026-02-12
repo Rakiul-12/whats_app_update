@@ -9,10 +9,10 @@ class CallRepo extends GetxController {
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  String? _safe(String? v) {
-    if (v == null) return null;
-    final s = v.trim();
-    return s.isEmpty ? null : s;
+  String? _safe(String? value) {
+    if (value == null) return null;
+    final string = value.trim();
+    return string.isEmpty ? null : string;
   }
 
   // save call status in db
@@ -22,6 +22,9 @@ class CallRepo extends GetxController {
     required String receiverId,
     required AppCallType callType,
     required AppCallStatus status,
+
+    String? receiverImage,
+    String? callerImage,
     String? callerName,
     String? callerPhone,
     String? receiverName,
@@ -35,6 +38,12 @@ class CallRepo extends GetxController {
 
     await _db.runTransaction((tx) async {
       final snap = await tx.get(doc);
+
+      final statusLower = status.name.toLowerCase();
+      final isBadStatus =
+          statusLower == "missed" ||
+          statusLower == "rejected" ||
+          statusLower == "declined";
 
       final data = <String, dynamic>{
         "callId": callId,
@@ -58,22 +67,37 @@ class CallRepo extends GetxController {
       } else if (!(snap.data() ?? {}).containsKey("createdAt")) {
         data["createdAt"] = now;
       }
-
       data["createdAtText"] = CallFormat.timeFromMillis(data["createdAt"]);
 
       if (endedAt != null) {
         data["endedAtText"] = CallFormat.timeFromMillis(endedAt);
       }
 
-      final cn = _safe(callerName);
-      final cp = _safe(callerPhone);
-      final rn = _safe(receiverName);
-      final rp = _safe(receiverPhone);
+      if (!snap.exists) {
+        data["seenBy"] = <String, bool>{};
+      }
 
-      if (cn != null) data["callerName"] = cn;
-      if (cp != null) data["callerPhone"] = cp;
-      if (rn != null) data["receiverName"] = rn;
-      if (rp != null) data["receiverPhone"] = rp;
+      if (isBadStatus) {
+        if (!snap.exists) {
+          data["seenBy"] = <String, bool>{};
+        } else if ((snap.data() ?? {})["seenBy"] == null) {
+          data["seenBy"] = <String, bool>{};
+        }
+      }
+
+      final CallerName = _safe(callerName);
+      final CallerPhone = _safe(callerPhone);
+      final ReceiverName = _safe(receiverName);
+      final ReceiverPhone = _safe(receiverPhone);
+      final CallerImage = _safe(callerImage);
+      final ReceiverImage = _safe(receiverImage);
+
+      if (CallerName != null) data["callerName"] = CallerName;
+      if (CallerPhone != null) data["callerPhone"] = CallerPhone;
+      if (ReceiverName != null) data["receiverName"] = ReceiverName;
+      if (ReceiverPhone != null) data["receiverPhone"] = ReceiverPhone;
+      if (CallerImage != null) data["callerImage"] = CallerImage;
+      if (ReceiverImage != null) data["receiverImage"] = ReceiverImage;
 
       tx.set(doc, data, SetOptions(merge: true));
     });

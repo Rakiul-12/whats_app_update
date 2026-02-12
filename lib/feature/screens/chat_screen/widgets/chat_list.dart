@@ -62,7 +62,7 @@ class ChatScreenChatList extends StatelessWidget {
           }
 
           if (!chatSnap.hasData || chatSnap.data!.docs.isEmpty) {
-            return const Center(child: Text("No chats"));
+            return Center(child: Text(MyKeys.chatScreenNoReasultText));
           }
 
           // collect accounts
@@ -70,8 +70,8 @@ class ChatScreenChatList extends StatelessWidget {
           for (final d in chatSnap.data!.docs) {
             final data = d.data();
             final parts = (data['participants'] ?? []) as List<dynamic>;
-            for (final p in parts) {
-              final id = p.toString();
+            for (final part in parts) {
+              final id = part.toString();
               if (id.isNotEmpty && id != myId) partnerIds.add(id);
             }
           }
@@ -82,7 +82,7 @@ class ChatScreenChatList extends StatelessWidget {
               .toList();
 
           if (uniquePartnerIds.isEmpty) {
-            return const Center(child: Text("No message..."));
+            return Center(child: Text(MyKeys.chatScreenNoReasultText));
           }
 
           // deleted chats
@@ -102,7 +102,7 @@ class ChatScreenChatList extends StatelessWidget {
                   .toList();
 
               if (filteredIds.isEmpty) {
-                return const Center(child: Text("No message..."));
+                return Center(child: Text(MyKeys.chatScreenNoReasultText));
               }
 
               return FutureBuilder<List<UserModel>>(
@@ -117,14 +117,16 @@ class ChatScreenChatList extends StatelessWidget {
                     );
                   }
 
-                  final map = {for (final u in usersSnap.data!) u.id: u};
+                  final map = {
+                    for (final user in usersSnap.data!) user.id: user,
+                  };
                   final users = filteredIds
                       .map((id) => map[id])
                       .whereType<UserModel>()
                       .toList();
 
                   if (users.isEmpty) {
-                    return Center(child: Text("No message..."));
+                    return Center(child: Text(MyKeys.chatScreenNoReasultText));
                   }
 
                   return ListView.separated(
@@ -153,7 +155,7 @@ class ChatScreenChatList extends StatelessWidget {
 
                             final Map<String, dynamic> deletedBy =
                                 Map<String, dynamic>.from(
-                                  data['deletedBy'] ?? const {},
+                                  data['deletedBy'] ?? {},
                                 );
 
                             final bool isDeletedForMe = deletedBy[myId] == true;

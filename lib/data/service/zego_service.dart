@@ -89,19 +89,26 @@ class ZegoService {
               final fromPhone = (data["fromPhone"] ?? _myPhone)
                   .toString()
                   .trim();
+              final now = (data["startedAt"]);
+
               final toName = (data["toName"] ?? "").toString().trim();
               final toPhone = (data["toPhone"] ?? "").toString().trim();
+              final receiverImage = (data["toImage"] ?? "").toString().trim();
+              final callerImage = (data["fromImage"] ?? "").toString().trim();
 
               await repo.CallRepo.instance.upsertCall(
                 callId: callID,
                 callerId: _myId,
                 receiverId: toId,
                 callType: ct,
+                durationSec: now,
                 status: enums.AppCallStatus.ringing,
                 callerName: fromName.isEmpty ? null : fromName,
                 callerPhone: fromPhone.isEmpty ? null : fromPhone,
                 receiverName: toName.isEmpty ? null : toName,
                 receiverPhone: toPhone.isEmpty ? null : toPhone,
+                callerImage: callerImage.isEmpty ? null : callerImage,
+                receiverImage: receiverImage.isEmpty ? null : receiverImage,
               );
 
               // for save to show on ui / chat screen
@@ -138,6 +145,11 @@ class ZegoService {
           final toName = (data["toName"] ?? "").toString().trim();
           final toPhone = (data["toPhone"] ?? "").toString().trim();
 
+          final startedAt = data["startedAt"] ?? now;
+          final durationSec = ((now - startedAt) / 1000).floor();
+
+          final receiverImage = (data["toImage"] ?? "").toString().trim();
+          final callerImage = (data["fromImage"] ?? "").toString().trim();
           await repo.CallRepo.instance.upsertCall(
             callId: callID,
             callerId: _myId,
@@ -145,11 +157,13 @@ class ZegoService {
             callType: ct,
             status: enums.AppCallStatus.missed,
             endedAt: now,
-            durationSec: 0,
+            durationSec: durationSec,
             callerName: fromName.isEmpty ? null : fromName,
             callerPhone: fromPhone.isEmpty ? null : fromPhone,
             receiverName: toName.isEmpty ? null : toName,
             receiverPhone: toPhone.isEmpty ? null : toPhone,
+            callerImage: callerImage.isEmpty ? null : callerImage,
+            receiverImage: receiverImage.isEmpty ? null : receiverImage,
           );
         },
 
@@ -168,10 +182,18 @@ class ZegoService {
               ? enums.AppCallType.video
               : enums.AppCallType.audio;
 
+          final startedAt = data["startedAt"] ?? now;
+          final durationSec = ((now - startedAt) / 1000).floor();
+
           final fromName = (data["fromName"] ?? _myName).toString().trim();
           final fromPhone = (data["fromPhone"] ?? _myPhone).toString().trim();
           final toName = (data["toName"] ?? "").toString().trim();
           final toPhone = (data["toPhone"] ?? "").toString().trim();
+
+          final String image =
+              (data["receiverImage"] ?? data["toImage"] ?? data["image"] ?? "")
+                  .toString()
+                  .trim();
 
           await repo.CallRepo.instance.upsertCall(
             callId: callID,
@@ -180,11 +202,12 @@ class ZegoService {
             callType: ct,
             status: enums.AppCallStatus.canceled,
             endedAt: now,
-            durationSec: 0,
+            durationSec: durationSec,
             callerName: fromName.isEmpty ? null : fromName,
             callerPhone: fromPhone.isEmpty ? null : fromPhone,
             receiverName: toName.isEmpty ? null : toName,
             receiverPhone: toPhone.isEmpty ? null : toPhone,
+            receiverImage: image.isEmpty ? null : image,
           );
         },
 
@@ -207,6 +230,11 @@ class ZegoService {
           final fromName = (data["fromName"] ?? caller.name).toString().trim();
           final fromPhone = (data["fromPhone"] ?? "").toString().trim();
 
+          final startedAt = data["startedAt"] ?? now;
+          final durationSec = ((now - startedAt) / 1000).floor();
+          final receiverImage = (data["toImage"] ?? "").toString().trim();
+          final callerImage = (data["fromImage"] ?? "").toString().trim();
+
           await repo.CallRepo.instance.upsertCall(
             callId: callID,
             callerId: fromId,
@@ -214,11 +242,13 @@ class ZegoService {
             callType: ct,
             status: enums.AppCallStatus.canceled,
             endedAt: now,
-            durationSec: 0,
+            durationSec: durationSec,
             callerName: fromName.isEmpty ? null : fromName,
             callerPhone: fromPhone.isEmpty ? null : fromPhone,
             receiverName: _myName,
             receiverPhone: _myPhone.isEmpty ? null : _myPhone,
+            callerImage: callerImage.isEmpty ? null : callerImage,
+            receiverImage: receiverImage.isEmpty ? null : receiverImage,
           );
         },
       ),

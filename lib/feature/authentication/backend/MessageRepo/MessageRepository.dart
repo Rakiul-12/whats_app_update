@@ -3,12 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:image_picker/image_picker.dart';
 import 'package:whats_app/binding/enum.dart';
 import 'package:whats_app/feature/authentication/Model/UserModel.dart';
 import 'package:whats_app/utiles/const/keys.dart';
+import 'package:whats_app/utiles/exception/firebase_auth_exceptions.dart';
+import 'package:whats_app/utiles/exception/firebase_exceptions.dart';
+import 'package:whats_app/utiles/exception/formate_exceptions.dart';
+import 'package:whats_app/utiles/exception/platform_exceptions.dart';
 import 'package:whats_app/utiles/popup/SnackbarHepler.dart';
 
 class Messagerepository extends GetxController {
