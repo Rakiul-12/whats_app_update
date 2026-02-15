@@ -50,6 +50,7 @@ class ChatScreenChatList extends StatelessWidget {
         stream: FirebaseFirestore.instance
             .collection(MyKeys.chatCollection)
             .where('participants', arrayContains: myId)
+            // .orderBy('sent', descending: true)
             .snapshots(),
         builder: (context, chatSnap) {
           if (chatSnap.connectionState == ConnectionState.waiting) {
@@ -91,6 +92,7 @@ class ChatScreenChatList extends StatelessWidget {
                 .collection(MyKeys.userCollection)
                 .doc(myId)
                 .collection('deleted_chats')
+                .orderBy('sent', descending: true)
                 .snapshots(),
             builder: (context, deletedSnap) {
               final deletedIds = deletedSnap.hasData

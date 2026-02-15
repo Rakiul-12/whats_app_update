@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 
 class NavBadgeIcon extends StatelessWidget {
-  const NavBadgeIcon({required this.icon, required this.count});
+  const NavBadgeIcon({super.key, required this.icon, required this.count});
 
   final IconData icon;
   final int count;

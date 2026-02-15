@@ -8,7 +8,6 @@ import 'package:whats_app/feature/authentication/backend/call_repo/timeFormate.d
 import 'package:whats_app/utiles/const/keys.dart';
 import 'package:whats_app/utiles/theme/const/colors.dart';
 import 'package:whats_app/utiles/theme/const/image.dart';
-import 'package:whats_app/utiles/theme/const/sizes.dart';
 import 'package:whats_app/utiles/theme/helpers/helper_function.dart';
 
 class Callslist extends StatelessWidget {
@@ -22,6 +21,7 @@ class Callslist extends StatelessWidget {
     final stream = FirebaseFirestore.instance
         .collection(MyKeys.callCollection)
         .where("participants", arrayContains: myId)
+        .orderBy("createdAt", descending: true)
         .snapshots();
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -46,21 +46,8 @@ class Callslist extends StatelessWidget {
 
         final docs = [...snap.data!.docs];
 
-        // docs.sort((a, b) {
-        //   int getTime(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-        //     final data = doc.data();
-        //     final v =
-        //         data["updatedAt"] ?? data["createdAt"] ?? data["endedAt"] ?? 0;
-        //     if (v is Timestamp) return v.millisecondsSinceEpoch;
-        //     if (v is int) return v;
-        //     return int.tryParse(v.toString()) ?? 0;
-        //   }
-
-        //   return getTime(b).compareTo(getTime(a));
-        // });
-
         return ListView.separated(
-          padding: const EdgeInsets.symmetric(vertical: 7),
+          padding: EdgeInsets.symmetric(vertical: 7),
           itemCount: docs.length,
           separatorBuilder: (_, __) => SizedBox(height: 2),
           itemBuilder: (context, index) {
@@ -88,20 +75,38 @@ class Callslist extends StatelessWidget {
 
             final isMissed = status == "missed";
             final isRejected = status == "rejected" || status == "declined";
-
-            final bool isRed = isIncoming && (isMissed || isRejected);
+            final isAnsweredOrEndedOrCanceled =
+                status == "answered" ||
+                status == "ended" ||
+                status == "canceled";
 
             final directionIcon = isOutgoing
                 ? Icons.call_made
                 : Icons.call_received;
-            final directionColor = isRed ? Mycolors.error : Colors.green;
+
+            final directionColor = (isMissed || isRejected)
+                ? Mycolors.error
+                : isAnsweredOrEndedOrCanceled
+                ? Colors.green
+                : Colors.green;
 
             final timeMs =
                 data["endedAt"] ?? data["createdAt"] ?? data["updatedAt"];
             final timeText = CallFormat.whatsappTime(timeMs);
 
-            final subtitle = "${_statusText(status)} • $timeText";
-            final textColor = isRed
+            // Duration
+            final durationSec = (data["durationSec"] ?? 0) as int;
+            String subtitle;
+            if (status == "answered" || status == "ended") {
+              final durationText = _formatDuration(durationSec);
+              subtitle = "${_statusText(status)} • $durationText • $timeText";
+            } else {
+              subtitle = "${_statusText(status)} • $timeText";
+            }
+
+            final textColor = (isMissed || isRejected)
+                ? Mycolors.success
+                : isAnsweredOrEndedOrCanceled
                 ? Mycolors.error
                 : isDark
                 ? Mycolors.light
@@ -110,7 +115,6 @@ class Callslist extends StatelessWidget {
             return ListTile(
               contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
 
-              // on call button tap
               onTap: () {
                 final user = _userFromCall(data, isOutgoing);
 
@@ -143,7 +147,7 @@ class Callslist extends StatelessWidget {
                             ),
                             subtitle: Text(MyKeys.callBottomSheetText),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           ListTile(
                             contentPadding: EdgeInsets.zero,
                             leading: ZegoCallInvitationButton(
@@ -198,7 +202,9 @@ class Callslist extends StatelessWidget {
 
               trailing: Icon(
                 isVideo ? Icons.videocam : Icons.call,
-                color: isRed ? Colors.redAccent : Mycolors.success,
+                color: (isMissed || isRejected)
+                    ? Colors.redAccent
+                    : Colors.green,
               ),
             );
           },
@@ -235,17 +241,30 @@ class Callslist extends StatelessWidget {
       case "missed":
         return "Missed";
       case "rejected":
+        return "Rejected";
       case "declined":
         return "Declined";
       case "canceled":
         return "Canceled";
       case "ended":
+        return "Ended";
       case "answered":
         return "Call";
       case "ringing":
         return "Calling…";
       default:
         return "Call";
+    }
+  }
+
+  String _formatDuration(int seconds) {
+    if (seconds <= 0) return "";
+    if (seconds < 60) {
+      return "${seconds}s";
+    } else {
+      final minutes = seconds ~/ 60;
+      final secs = seconds % 60;
+      return secs == 0 ? "${minutes}m" : "${minutes}m ${secs}s";
     }
   }
 }

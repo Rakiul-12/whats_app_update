@@ -11,93 +11,114 @@ class CallRepo extends GetxController {
 
   String? _safe(String? value) {
     if (value == null) return null;
-    final string = value.trim();
-    return string.isEmpty ? null : string;
+    final s = value.trim();
+    return s.isEmpty ? null : s;
   }
 
-  // save call status in db
   Future<void> upsertCall({
     required String callId,
-    required String callerId,
-    required String receiverId,
-    required AppCallType callType,
-    required AppCallStatus status,
+    String? callerId,
+    String? receiverId,
+    AppCallType? callType,
+    AppCallStatus? status,
 
+    // ✅ duration fields
+    int? startedAt, // invitation/ringing time
+    int? connectedAt, // real call start time
+    int? endedAt,
+    int? durationSec,
+
+    // (optional) identity fields
     String? receiverImage,
     String? callerImage,
     String? callerName,
     String? callerPhone,
     String? receiverName,
     String? receiverPhone,
-    int? startedAt,
-    int? endedAt,
-    int? durationSec,
   }) async {
     final doc = _db.collection(MyKeys.callCollection).doc(callId);
     final now = DateTime.now().millisecondsSinceEpoch;
 
     await _db.runTransaction((tx) async {
       final snap = await tx.get(doc);
+      final old = snap.data() ?? <String, dynamic>{};
 
-      final statusLower = status.name.toLowerCase();
-      final isBadStatus =
-          statusLower == "missed" ||
-          statusLower == "rejected" ||
-          statusLower == "declined";
+      // keep old values if not provided
+      int oldStartedAt = (old["startedAt"] is int)
+          ? old["startedAt"] as int
+          : 0;
+      int oldConnectedAt = (old["connectedAt"] is int)
+          ? old["connectedAt"] as int
+          : 0;
+      int oldEndedAt = (old["endedAt"] is int) ? old["endedAt"] as int : 0;
+      int oldDuration = (old["durationSec"] is int)
+          ? old["durationSec"] as int
+          : 0;
 
       final data = <String, dynamic>{
         "callId": callId,
-        "callerId": callerId,
-        "receiverId": receiverId,
-        "participants": [callerId, receiverId],
-
-        "callType": callType.name,
-        "status": status.name,
-
-        "startedAt": startedAt,
-        "endedAt": endedAt,
-        "durationSec": durationSec ?? 0,
-
         "updatedAt": now,
         "updatedAtText": CallFormat.timeFromMillis(now),
       };
 
+      // createdAt
       if (!snap.exists) {
         data["createdAt"] = now;
-      } else if (!(snap.data() ?? {}).containsKey("createdAt")) {
+        data["createdAtText"] = CallFormat.timeFromMillis(now);
+      } else if (!old.containsKey("createdAt")) {
         data["createdAt"] = now;
-      }
-      data["createdAtText"] = CallFormat.timeFromMillis(data["createdAt"]);
-
-      if (endedAt != null) {
-        data["endedAtText"] = CallFormat.timeFromMillis(endedAt);
+        data["createdAtText"] = CallFormat.timeFromMillis(now);
       }
 
-      if (!snap.exists) {
-        data["seenBy"] = <String, bool>{};
+      // identity (only overwrite if provided)
+      if (_safe(callerId) != null) data["callerId"] = callerId;
+      if (_safe(receiverId) != null) data["receiverId"] = receiverId;
+      if (callType != null) data["callType"] = callType.name;
+      if (status != null) data["status"] = status.name;
+
+      // participants (only if callerId & receiverId are present at least once)
+      final finalCallerId = (data["callerId"] ?? old["callerId"] ?? "")
+          .toString();
+      final finalReceiverId = (data["receiverId"] ?? old["receiverId"] ?? "")
+          .toString();
+      if (finalCallerId.isNotEmpty && finalReceiverId.isNotEmpty) {
+        data["participants"] = [finalCallerId, finalReceiverId];
       }
 
-      if (isBadStatus) {
-        if (!snap.exists) {
-          data["seenBy"] = <String, bool>{};
-        } else if ((snap.data() ?? {})["seenBy"] == null) {
-          data["seenBy"] = <String, bool>{};
-        }
+      // ✅ duration fields (safe merge)
+      final int finalStartedAt =
+          startedAt ?? (oldStartedAt > 0 ? oldStartedAt : now);
+      data["startedAt"] = finalStartedAt;
+
+      final int finalConnectedAt = connectedAt ?? oldConnectedAt;
+      if (finalConnectedAt > 0) {
+        data["connectedAt"] = finalConnectedAt;
+        data["connectedAtText"] = CallFormat.timeFromMillis(finalConnectedAt);
       }
 
-      final CallerName = _safe(callerName);
-      final CallerPhone = _safe(callerPhone);
-      final ReceiverName = _safe(receiverName);
-      final ReceiverPhone = _safe(receiverPhone);
-      final CallerImage = _safe(callerImage);
-      final ReceiverImage = _safe(receiverImage);
+      final int finalEndedAt = endedAt ?? oldEndedAt;
+      if (finalEndedAt > 0) {
+        data["endedAt"] = finalEndedAt;
+        data["endedAtText"] = CallFormat.timeFromMillis(finalEndedAt);
+      }
 
-      if (CallerName != null) data["callerName"] = CallerName;
-      if (CallerPhone != null) data["callerPhone"] = CallerPhone;
-      if (ReceiverName != null) data["receiverName"] = ReceiverName;
-      if (ReceiverPhone != null) data["receiverPhone"] = ReceiverPhone;
-      if (CallerImage != null) data["callerImage"] = CallerImage;
-      if (ReceiverImage != null) data["receiverImage"] = ReceiverImage;
+      final int finalDuration = durationSec ?? oldDuration;
+      data["durationSec"] = finalDuration;
+
+      // optional images/names (only overwrite if provided)
+      final cImg = _safe(callerImage);
+      final rImg = _safe(receiverImage);
+      final cName = _safe(callerName);
+      final rName = _safe(receiverName);
+      final cPhone = _safe(callerPhone);
+      final rPhone = _safe(receiverPhone);
+
+      if (cImg != null) data["callerImage"] = cImg;
+      if (rImg != null) data["receiverImage"] = rImg;
+      if (cName != null) data["callerName"] = cName;
+      if (rName != null) data["receiverName"] = rName;
+      if (cPhone != null) data["callerPhone"] = cPhone;
+      if (rPhone != null) data["receiverPhone"] = rPhone;
 
       tx.set(doc, data, SetOptions(merge: true));
     });

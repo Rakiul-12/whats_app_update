@@ -24,6 +24,7 @@ class FindUserController extends GetxController {
     loadAllAndFilter();
   }
 
+  // load user
   Future<void> loadAllAndFilter() async {
     loading.value = true;
     status.value = "Requesting contacts permission...";
@@ -39,15 +40,15 @@ class FindUserController extends GetxController {
     }
 
     status.value = "Reading contacts...";
-    final list = await FlutterContacts.getContacts(withProperties: true);
-    list.sort((a, b) => a.displayName.compareTo(b.displayName));
-    contacts.assignAll(list);
+    final lists = await FlutterContacts.getContacts(withProperties: true);
+    lists.sort((a, b) => a.displayName.compareTo(b.displayName));
+    contacts.assignAll(lists);
 
     final Set<String> phones = {};
-    for (final c in list) {
-      for (final p in c.phones) {
-        final n = normalizeBDPhone(p.number);
-        if (n.isNotEmpty) phones.add(n);
+    for (final list in lists) {
+      for (final phone in list.phones) {
+        final number = normalizeBDPhone(phone.number);
+        if (number.isNotEmpty) phones.add(number);
       }
     }
 
@@ -110,28 +111,28 @@ class FindUserController extends GetxController {
         : "Found ${registeredUsers.length} users";
   }
 
-  ///  first phone of contact
-  String firstPhone(Contact c) {
-    if (c.phones.isEmpty) return "";
-    return c.phones.first.number;
+  //  first phone of contact
+  String firstPhone(Contact contact) {
+    if (contact.phones.isEmpty) return "";
+    return contact.phones.first.number;
   }
 
-  bool isRegisteredContact(Contact c) {
-    for (final p in c.phones) {
-      final n = normalizeBDPhone(p.number);
-      if (registeredPhones.contains(n)) return true;
+  bool isRegisteredContact(Contact contact) {
+    for (final phone in contact.phones) {
+      final number = normalizeBDPhone(phone.number);
+      if (registeredPhones.contains(number)) return true;
     }
     return false;
   }
 
-  //Get matched registered user for contact
-  UserModel? matchedUser(Contact c) {
-    for (final p in c.phones) {
-      final n = normalizeBDPhone(p.number);
-      if (registeredPhones.contains(n)) {
-        // Find user for matching phoneNumber
+  // matched registered user for contact
+  UserModel? matchedUser(Contact contact) {
+    for (final phone in contact.phones) {
+      final number = normalizeBDPhone(phone.number);
+      if (registeredPhones.contains(number)) {
+        // Find user for matching phonenumber
         return registeredUsers.firstWhereOrNull(
-          (u) => normalizeBDPhone(u.phoneNumber) == n,
+          (user) => normalizeBDPhone(user.phoneNumber) == number,
         );
       }
     }
