@@ -11,28 +11,39 @@ class ChatScreenSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isDark = MyHelperFunction.isDarkMode(context);
     final controller = Get.put(ChatSearchController());
-
-    return TextFormField(
-      controller: controller.searchController,
-      onChanged: controller.onQueryChanged,
-      decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 16,
-        ),
-        prefixIcon: Icon(
-          Icons.search,
-          color: isDark ? Mycolors.borderPrimary : Mycolors.textPrimary,
-        ),
-        hintText: "Search user",
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(50),
-          borderSide: const BorderSide(color: Colors.grey),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(50),
-          borderSide: const BorderSide(color: Colors.green, width: 2),
+    return Obx(
+      () => TextFormField(
+        controller: controller.searchController,
+        onChanged: controller.search,
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
+          prefixIcon: controller.isTyping.value
+              ? IconButton(
+                  icon: Icon(
+                    Icons.close,
+                    color: isDark
+                        ? Mycolors.borderPrimary
+                        : Mycolors.textPrimary,
+                  ),
+                  onPressed: controller.clearSearch,
+                )
+              : Icon(
+                  Icons.search,
+                  color: isDark ? Mycolors.borderPrimary : Mycolors.textPrimary,
+                ),
+          hintText: "Search user",
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide(color: Mycolors.grey),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide(color: Mycolors.success, width: 2),
+          ),
         ),
       ),
     );

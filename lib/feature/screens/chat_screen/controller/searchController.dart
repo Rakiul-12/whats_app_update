@@ -11,20 +11,36 @@ class ChatSearchController extends GetxController {
   final isLoading = false.obs;
   final results = <UserModel>[].obs;
   final error = RxnString();
+  final isTyping = false.obs;
 
-  Timer? _debounce;
+  // Timer? _debounce;
 
-  void onQueryChanged(String q) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 350), () {
-      search(q);
+  // void onQueryChanged(String query) {
+  //   _debounce?.cancel();
+  //   _debounce = Timer( Duration(milliseconds: 350), () {
+  //     search(query);
+  //   });
+  // }
+
+  @override
+  void onInit() {
+    super.onInit();
+    searchController.addListener(() {
+      isTyping.value = searchController.text.isNotEmpty;
     });
   }
 
-  Future<void> search(String query) async {
-    final q = query.trim();
+  void clearSearch() {
+    searchController.clear();
+    results.clear();
+    error.value = null;
+    isTyping.value = false;
+  }
 
-    if (q.isEmpty) {
+  Future<void> search(String userName) async {
+    final reasult = userName.trim();
+
+    if (reasult.isEmpty) {
       results.clear();
       error.value = null;
       return;
@@ -34,16 +50,17 @@ class ChatSearchController extends GetxController {
     error.value = null;
 
     try {
-      // Username prefix search (case-sensitive unless you store usernameLower)
       final snap = await FirebaseFirestore.instance
           .collection(MyKeys.userCollection)
           .orderBy('username')
-          .startAt([q])
-          .endAt(['$q\uf8ff'])
+          .startAt([reasult])
+          .endAt(['$reasult\uf8ff'])
           .limit(20)
           .get();
 
-      results.value = snap.docs.map((d) => UserModel.fromSnapshot(d)).toList();
+      results.value = snap.docs
+          .map((data) => UserModel.fromSnapshot(data))
+          .toList();
     } catch (e) {
       error.value = "Search error: $e";
     } finally {
@@ -53,7 +70,7 @@ class ChatSearchController extends GetxController {
 
   @override
   void onClose() {
-    _debounce?.cancel();
+    // _debounce?.cancel();
     searchController.dispose();
     super.onClose();
   }

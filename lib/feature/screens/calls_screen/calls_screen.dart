@@ -37,7 +37,6 @@ class CallScreen extends StatelessWidget {
       ),
       appBar: AppBar(
         title: Text("Calls", style: Theme.of(context).textTheme.headlineMedium),
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.search))],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
